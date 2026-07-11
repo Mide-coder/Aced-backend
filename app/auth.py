@@ -3,15 +3,12 @@ from typing import Optional
 import hashlib
 
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
 from app.config import settings
 from app.models import User
-
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # OAuth2 scheme — token URL will be our login endpoint
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
@@ -20,11 +17,11 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 # ── Password Helpers ──────────────────────────────────────────────────────────
 
 def hash_password(plain_password: str) -> str:
-    return pwd_context.hash(plain_password)
+    return bcrypt.hashpw(plain_password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
 
 
 # ── Token Helpers ─────────────────────────────────────────────────────────────
