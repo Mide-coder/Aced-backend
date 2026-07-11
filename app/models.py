@@ -1,8 +1,9 @@
+from __future__ import annotations
+
 from sqlmodel import SQLModel, Field
 from enum import Enum
 from typing import Optional
 from datetime import datetime
-import uuid
 
 
 class UserRole(str, Enum):
