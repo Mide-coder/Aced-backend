@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session, select
 from datetime import timezone, datetime
+
+from app.limiter import limiter
 
 from app.database import get_session
 from app.models import User, UserCreate, UserRead, detect_university_from_email
@@ -61,7 +63,9 @@ def register(user_in: UserCreate, session: Session = Depends(get_session)):
 # ── Login ─────────────────────────────────────────────────────────────────────
 
 @router.post("/login")
+@limiter.limit("5/15minutes")
 def login(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     session: Session = Depends(get_session),
 ):
