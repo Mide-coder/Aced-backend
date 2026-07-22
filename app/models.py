@@ -63,3 +63,14 @@ class UserRead(UserBase):
 class UserUpdate(SQLModel):
     full_name: Optional[str] = None
     role: Optional[UserRole] = None
+
+
+# ── Token Blacklist ───────────────────────────────────────────────────────────
+
+class TokenBlacklist(SQLModel, table=True):
+    __tablename__ = "token_blacklist"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    token_hash: str = Field(unique=True, index=True)
+    expires_at: datetime
+    created_at: datetime = Field(default_factory=datetime.utcnow)
