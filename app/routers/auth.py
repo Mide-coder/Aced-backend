@@ -3,8 +3,6 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session, select
 from datetime import timezone, datetime
 
-from app.limiter import limiter
-
 from app.database import get_session
 from app.models import User, UserCreate, UserRead, detect_university_from_email
 from app.auth import (
@@ -18,6 +16,7 @@ from app.auth import (
     get_current_user,
 )
 from app.config import settings
+from app.rate_limit import limiter
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -25,7 +24,8 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 # ── Register ──────────────────────────────────────────────────────────────────
 
 @router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
-def register(user_in: UserCreate, session: Session = Depends(get_session)):
+@limiter.limit("10/minute")  # 10 registrations per minute per IP
+def register(request: Request, user_in: UserCreate, session: Session = Depends(get_session)):
     """
     Register a new user.
     - University is auto-detected from email domain (e.g. @funaab.edu.ng)
@@ -63,7 +63,7 @@ def register(user_in: UserCreate, session: Session = Depends(get_session)):
 # ── Login ─────────────────────────────────────────────────────────────────────
 
 @router.post("/login")
-@limiter.limit("5/15minutes")
+@limiter.limit("5/15minutes")  # 5 login attempts per 15 minutes per IP
 def login(
     request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
@@ -103,7 +103,8 @@ def login(
 # ── Refresh Token Rotation ────────────────────────────────────────────────────
 
 @router.post("/refresh")
-def refresh_token(refresh_token: str, session: Session = Depends(get_session)):
+@limiter.limit("10/minute")  # 10 refresh attempts per minute per IP
+def refresh_token(request: Request, refresh_token: str, session: Session = Depends(get_session)):
     """
     Rotate refresh token.
     - Validates the old refresh token
