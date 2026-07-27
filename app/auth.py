@@ -3,15 +3,12 @@ from typing import Optional
 import hashlib
 
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from sqlmodel import Session, select
 
 from app.config import settings
-from app.models import User
-
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # OAuth2 scheme — token URL will be our login endpoint
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
@@ -20,11 +17,11 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 # ── Password Helpers ──────────────────────────────────────────────────────────
 
 def hash_password(plain_password: str) -> str:
-    return pwd_context.hash(plain_password)
+    return bcrypt.hashpw(plain_password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
 
 
 # ── Token Helpers ─────────────────────────────────────────────────────────────
@@ -65,33 +62,43 @@ def decode_token(token: str) -> dict:
 
 
 def hash_token_for_blacklist(token: str) -> str:
-    """Hash a token before storing it in Redis blacklist (never store raw tokens)."""
+    """Hash a token before storing it in database (never store raw tokens)."""
     return hashlib.sha256(token.encode()).hexdigest()
 
 
-# ── Redis Blacklist ───────────────────────────────────────────────────────────
+# ── Database Blacklist ────────────────────────────────────────────────────────
 
-def is_token_blacklisted(token: str) -> bool:
-    """Check if a refresh token has been revoked. Requires Redis connection."""
-    try:
-        import redis
-        r = redis.from_url(settings.REDIS_URL, decode_responses=True)
-        token_hash = hash_token_for_blacklist(token)
-        return r.exists(f"blacklist:{token_hash}") == 1
-    except Exception:
-        # If Redis is unavailable, fail safe (don't block auth)
-        return False
+def is_token_blacklisted(token: str, session: Session) -> bool:
+    """Check if a refresh token has been revoked."""
+    from app.models import TokenBlacklist
+    
+    token_hash = hash_token_for_blacklist(token)
+    result = session.exec(
+        select(TokenBlacklist).where(TokenBlacklist.token_hash == token_hash)
+    ).first()
+    return result is not None
 
 
-def blacklist_token(token: str, ttl_seconds: int) -> None:
-    """Add a refresh token hash to the Redis blacklist with TTL."""
-    try:
-        import redis
-        r = redis.from_url(settings.REDIS_URL, decode_responses=True)
-        token_hash = hash_token_for_blacklist(token)
-        r.setex(f"blacklist:{token_hash}", ttl_seconds, "revoked")
-    except Exception:
-        pass  # Log this in production via Sentry
+def blacklist_token(token: str, expires_at: datetime, session: Session) -> None:
+    """Add a refresh token hash to the database blacklist."""
+    from app.models import TokenBlacklist
+    
+    token_hash = hash_token_for_blacklist(token)
+    
+    # Check if already blacklisted (idempotency)
+    existing = session.exec(
+        select(TokenBlacklist).where(TokenBlacklist.token_hash == token_hash)
+    ).first()
+    
+    if existing:
+        return  # Already blacklisted
+    
+    blacklist_entry = TokenBlacklist(
+        token_hash=token_hash,
+        expires_at=expires_at,
+    )
+    session.add(blacklist_entry)
+    session.commit()
 
 
 # ── Current User Dependency ───────────────────────────────────────────────────

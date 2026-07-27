@@ -1,8 +1,16 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from contextlib import asynccontextmanager
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from app.database import create_db_and_tables
 from app.config import settings
+from app.routers import auth as auth_router
+from app.routers import tutors as tutors_router
+from app.routers import media as media_router
+from app.routers import bookings as bookings_router
+from app.routers import payments as payments_router
+from app.rate_limit import limiter
 
 
 @asynccontextmanager
@@ -20,7 +28,19 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Rate limiting
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Routers
+app.include_router(auth_router.router)
+app.include_router(tutors_router.router)
+app.include_router(media_router.router)
+app.include_router(bookings_router.router)
+app.include_router(payments_router.router)
+
 
 @app.get("/health")
-def health_check():
+@limiter.limit("100/minute")  # Global rate limit
+def health_check(request: Request):
     return {"status": "ok", "env": settings.ENVIRONMENT}
