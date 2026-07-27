@@ -74,3 +74,90 @@ class TokenBlacklist(SQLModel, table=True):
     token_hash: str = Field(unique=True, index=True)
     expires_at: datetime
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+# ── Course ────────────────────────────────────────────────────────────────────
+
+class Course(SQLModel, table=True):
+    __tablename__ = "courses"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    code: str = Field(index=True)        # e.g. "CSC201"
+    title: str                            # e.g. "Data Structures"
+    department: Optional[str] = None
+    university: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+# ── TutorProfile ──────────────────────────────────────────────────────────────
+
+class TutorProfile(SQLModel, table=True):
+    __tablename__ = "tutor_profiles"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id", unique=True, index=True)
+
+    bio: Optional[str] = None
+    hourly_rate: float = Field(default=2500.0)   # in Naira ₦1,000–₦5,000
+    grade_verified: bool = Field(default=False)   # "Verified A" badge
+    demo_video_url: Optional[str] = None          # Cloudflare R2 URL
+    average_rating: float = Field(default=0.0)
+    total_reviews: int = Field(default=0)
+    is_available: bool = Field(default=True)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class TutorProfileRead(SQLModel):
+    id: int
+    user_id: int
+    bio: Optional[str]
+    hourly_rate: float
+    grade_verified: bool
+    demo_video_url: Optional[str]
+    average_rating: float
+    total_reviews: int
+    is_available: bool
+
+
+# ── TutorCourse (many-to-many link) ──────────────────────────────────────────
+
+class TutorCourse(SQLModel, table=True):
+    __tablename__ = "tutor_courses"
+
+    tutor_profile_id: Optional[int] = Field(
+        default=None, foreign_key="tutor_profiles.id", primary_key=True
+    )
+    course_id: Optional[int] = Field(
+        default=None, foreign_key="courses.id", primary_key=True
+    )
+
+
+# ── Review ────────────────────────────────────────────────────────────────────
+
+class Review(SQLModel, table=True):
+    __tablename__ = "reviews"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    tutor_profile_id: int = Field(foreign_key="tutor_profiles.id", index=True)
+    student_id: int = Field(foreign_key="users.id")
+    rating: float = Field(ge=1.0, le=5.0)
+    comment: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class ReviewRead(SQLModel):
+    id: int
+    tutor_profile_id: int
+    student_id: int
+    rating: float
+    comment: Optional[str]
+    created_at: datetime
+
+
+# ── Tutor Search Result ───────────────────────────────────────────────────────
+
+class TutorSearchResult(SQLModel):
+    tutor: TutorProfileRead
+    user: UserRead
+    courses: list[str] = []   # list of course codes
