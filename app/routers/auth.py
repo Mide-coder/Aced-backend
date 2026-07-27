@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session, select
 from datetime import timezone, datetime
@@ -16,6 +16,7 @@ from app.auth import (
     get_current_user,
 )
 from app.config import settings
+from app.rate_limit import limiter
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -23,7 +24,8 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 # ── Register ──────────────────────────────────────────────────────────────────
 
 @router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
-def register(user_in: UserCreate, session: Session = Depends(get_session)):
+@limiter.limit("10/minute")  # 10 registrations per minute per IP
+def register(request: Request, user_in: UserCreate, session: Session = Depends(get_session)):
     """
     Register a new user.
     - University is auto-detected from email domain (e.g. @funaab.edu.ng)
@@ -61,7 +63,9 @@ def register(user_in: UserCreate, session: Session = Depends(get_session)):
 # ── Login ─────────────────────────────────────────────────────────────────────
 
 @router.post("/login")
+@limiter.limit("5/15minutes")  # 5 login attempts per 15 minutes per IP
 def login(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     session: Session = Depends(get_session),
 ):
@@ -99,7 +103,8 @@ def login(
 # ── Refresh Token Rotation ────────────────────────────────────────────────────
 
 @router.post("/refresh")
-def refresh_token(refresh_token: str):
+@limiter.limit("10/minute")  # 10 refresh attempts per minute per IP
+def refresh_token(request: Request, refresh_token: str, session: Session = Depends(get_session)):
     """
     Rotate refresh token.
     - Validates the old refresh token
@@ -108,7 +113,7 @@ def refresh_token(refresh_token: str):
     - Blacklists the old refresh token (rotation)
     """
     # Check blacklist first
-    if is_token_blacklisted(refresh_token):
+    if is_token_blacklisted(refresh_token, session):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh token has been revoked",
@@ -123,13 +128,12 @@ def refresh_token(refresh_token: str):
             detail="Invalid token type",
         )
 
-    # Calculate remaining TTL for blacklist entry
-    exp = payload.get("exp")
-    now = datetime.now(timezone.utc).timestamp()
-    ttl = max(int(exp - now), 1)
+    # Calculate expiration datetime for blacklist entry
+    exp_timestamp = payload.get("exp")
+    expires_at = datetime.fromtimestamp(exp_timestamp, tz=timezone.utc)
 
     # Blacklist the old refresh token (rotation — old token is now invalid)
-    blacklist_token(refresh_token, ttl_seconds=ttl)
+    blacklist_token(refresh_token, expires_at, session)
 
     # Issue new token pair
     token_data = {
@@ -148,23 +152,26 @@ def refresh_token(refresh_token: str):
 # ── Logout ────────────────────────────────────────────────────────────────────
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
-def logout(refresh_token: str, current_user: dict = Depends(get_current_user)):
+def logout(
+    refresh_token: str,
+    current_user: dict = Depends(get_current_user),
+    session: Session = Depends(get_session),
+):
     """
     Logout — blacklists the refresh token so it can't be used again.
     Access token expires naturally after 15 min.
     """
-    if is_token_blacklisted(refresh_token):
+    if is_token_blacklisted(refresh_token, session):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Token already revoked",
         )
 
     payload = decode_token(refresh_token)
-    exp = payload.get("exp")
-    now = datetime.now(timezone.utc).timestamp()
-    ttl = max(int(exp - now), 1)
+    exp_timestamp = payload.get("exp")
+    expires_at = datetime.fromtimestamp(exp_timestamp, tz=timezone.utc)
 
-    blacklist_token(refresh_token, ttl_seconds=ttl)
+    blacklist_token(refresh_token, expires_at, session)
 
 
 # ── Me (current user info) ────────────────────────────────────────────────────
