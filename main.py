@@ -8,6 +8,8 @@ from app.config import settings
 from app.routers import auth as auth_router
 from app.routers import tutors as tutors_router
 from app.routers import media as media_router
+from app.routers import bookings as bookings_router
+from app.routers import payments as payments_router
 from app.rate_limit import limiter
 
 
@@ -34,6 +36,8 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.include_router(auth_router.router)
 app.include_router(tutors_router.router)
 app.include_router(media_router.router)
+app.include_router(bookings_router.router)
+app.include_router(payments_router.router)
 
 
 @app.get("/health")
