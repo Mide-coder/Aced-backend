@@ -7,11 +7,62 @@ import hashlib
 from app.database import get_session
 from app.models import (
     Booking, BookingRead, BookingCreate, BookingStatus,
-    TutorProfile, AvailabilitySlot, AvailabilitySlotRead, AvailabilitySlotCreate,
+    TutorProfile, Course, TutorCourse, AvailabilitySlot,
+    AvailabilitySlotRead, AvailabilitySlotCreate,
 )
 from app.auth import get_current_user
 from app.config import settings
 from app.rate_limit import limiter
+
+# ── Tiered Pricing (₦2,500 – ₦4,000) based on course difficulty ───
+DIFFICULTY_PRICE_TIERS = {
+    "introductory": 2500,
+    "intermediate": 3000,
+    "advanced": 3500,
+    "expert": 4000,
+}
+
+DEFAULT_TIER_PRICE = 2500
+
+
+def get_course_difficulty_price(course: Course) -> float:
+    """
+    Get the tiered price for a specific course based on its difficulty.
+    Tiered pricing: ₦2,500 (introductory) → ₦4,000 (expert).
+    """
+    if course and course.difficulty:
+        return DIFFICULTY_PRICE_TIERS.get(course.difficulty, DEFAULT_TIER_PRICE)
+    return DEFAULT_TIER_PRICE
+
+
+def calculate_tiered_price(tutor_profile_id: int, course_id: int | None, session: Session) -> float:
+    """
+    Calculate the price for a booking based on the specific course being tutored.
+    Falls back to the highest-difficulty tier if no specific course is given.
+    """
+    # If a specific course is provided, use its difficulty
+    if course_id:
+        course = session.get(Course, course_id)
+        if course:
+            return get_course_difficulty_price(course)
+
+    # Fallback: use the highest-difficulty course the tutor teaches
+    course_links = session.exec(
+        select(TutorCourse).where(TutorCourse.tutor_profile_id == tutor_profile_id)
+    ).all()
+
+    if not course_links:
+        return DEFAULT_TIER_PRICE
+
+    course_ids = [link.course_id for link in course_links]
+    courses = session.exec(select(Course).where(Course.id.in_(course_ids))).all()
+
+    difficulties = [c.difficulty for c in courses if c.difficulty]
+    if not difficulties:
+        return DEFAULT_TIER_PRICE
+
+    prices = [DIFFICULTY_PRICE_TIERS.get(d, DEFAULT_TIER_PRICE) for d in difficulties]
+    return max(prices)
 
 router = APIRouter(prefix="/bookings", tags=["Bookings"])
 
@@ -63,8 +114,28 @@ def create_booking(
             detail="Tutor not found or unavailable",
         )
 
-    # Calculate total price
-    total_price = tutor.hourly_rate * booking_in.duration_hours
+    # Check for double-booking — ensure no overlapping session exists
+    booking_start = booking_in.session_datetime
+    booking_end = booking_start + timedelta(hours=booking_in.duration_hours)
+
+    existing_booking = session.exec(
+        select(Booking)
+        .where(Booking.tutor_profile_id == booking_in.tutor_profile_id)
+        .where(Booking.session_datetime < booking_end)
+        .where(
+            (Booking.session_datetime + timedelta(hours=Booking.duration_hours)) > booking_start
+        )
+        .where(Booking.status.not_in([BookingStatus.cancelled, BookingStatus.refunded]))
+    ).first()
+    if existing_booking:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="This time slot overlaps with an existing booking",
+        )
+
+    # Calculate total price using tiered pricing based on course difficulty
+    hourly_rate = calculate_tiered_price(booking_in.tutor_profile_id, booking_in.course_id, session)
+    total_price = hourly_rate * booking_in.duration_hours
     deposit_amount = total_price * 0.20  # 20% deposit for cancellation protection
 
     booking = Booking(

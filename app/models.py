@@ -37,6 +37,7 @@ class UserBase(SQLModel):
     full_name: str
     role: UserRole = Field(default=UserRole.student)
     university: Optional[str] = Field(default=None)
+    phone: Optional[str] = Field(default=None)
     is_active: bool = Field(default=True)
     is_verified: bool = Field(default=False)
 
@@ -65,6 +66,39 @@ class UserUpdate(SQLModel):
     role: Optional[UserRole] = None
 
 
+# ── Verification Request [E001-S04] ───────────────────────────────────────────
+
+class VerificationStatus(str, Enum):
+    """Status of a manual identity verification request."""
+    pending = "pending"
+    under_review = "under_review"
+    approved = "approved"
+    rejected = "rejected"
+
+
+class VerificationRequest(SQLModel, table=True):
+    __tablename__ = "verification_requests"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id", index=True)
+
+    # Storage path in Cloudflare R2
+    matric_id_path: str  # e.g. "matric-ids/{user_id}/{uuid}.{ext}"
+
+    # Auto-detected from email during registration
+    detected_university: Optional[str] = None
+    detected_email: str
+
+    # Manual review fields
+    status: VerificationStatus = Field(default=VerificationStatus.pending)
+    reviewed_by: Optional[int] = Field(default=None, foreign_key="users.id")
+    review_notes: Optional[str] = None
+    rejection_reason: Optional[str] = None
+
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    reviewed_at: Optional[datetime] = None
+
+
 # ── Token Blacklist ───────────────────────────────────────────────────────────
 
 class TokenBlacklist(SQLModel, table=True):
@@ -86,6 +120,7 @@ class Course(SQLModel, table=True):
     title: str                            # e.g. "Data Structures"
     department: Optional[str] = None
     university: Optional[str] = None
+    difficulty: Optional[str] = Field(default=None)  # introductory, intermediate, advanced, expert
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
@@ -180,18 +215,18 @@ class Booking(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     student_id: int = Field(foreign_key="users.id", index=True)
     tutor_profile_id: int = Field(foreign_key="tutor_profiles.id", index=True)
-    
+
     status: BookingStatus = Field(default=BookingStatus.pending)
-    
+
     session_datetime: datetime
     duration_hours: int = Field(default=1, ge=1, le=4)
     total_price: float
     deposit_amount: float = Field(default=0.0)  # 20% non-refundable if cancelled <24h
-    
+
     # Paystack integration
     paystack_reference: Optional[str] = Field(default=None, unique=True, index=True)
     payment_completed_at: Optional[datetime] = None
-    
+
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -211,6 +246,7 @@ class BookingRead(SQLModel):
 
 class BookingCreate(SQLModel):
     tutor_profile_id: int
+    course_id: Optional[int] = Field(default=None, description="Optional — used for per-course tiered pricing")
     session_datetime: datetime
     duration_hours: int = Field(default=1, ge=1, le=4)
 
@@ -222,11 +258,11 @@ class AvailabilitySlot(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     tutor_profile_id: int = Field(foreign_key="tutor_profiles.id", index=True)
-    
+
     day_of_week: int = Field(ge=0, le=6)  # 0=Monday, 6=Sunday
     start_time: str  # e.g. "14:00" (24h format)
     end_time: str    # e.g. "16:00"
-    
+
     is_active: bool = Field(default=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -244,3 +280,44 @@ class AvailabilitySlotCreate(SQLModel):
     day_of_week: int = Field(ge=0, le=6)
     start_time: str
     end_time: str
+
+
+# ── Financial Payout Ledger (Sprint 3) ────────────────────────────────────────
+
+class TransactionType(str, Enum):
+    """Types of financial transactions in the payout ledger."""
+    session_payment = "session_payment"         # Student pays for session
+    deposit_forfeited = "deposit_forfeited"     # 20% deposit forfeited on late cancel
+    refund = "refund"                           # Full/partial refund to student
+    tutor_payout = "tutor_payout"              # Manual bank transfer to tutor
+    platform_fee = "platform_fee"              # Platform commission (future)
+
+
+class PayoutLedger(SQLModel, table=True):
+    __tablename__ = "payout_ledger"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    booking_id: int = Field(foreign_key="bookings.id", index=True)
+
+    # Financial details
+    transaction_type: TransactionType
+    amount: float          # Positive = inflow to platform, Negative = outflow
+    description: str
+
+    # Settlement tracking (manual bank transfers)
+    tutor_id: Optional[int] = Field(default=None, foreign_key="users.id")
+    tutor_paid: bool = Field(default=False)
+    tutor_paid_at: Optional[datetime] = None
+    payment_method: Optional[str] = None  # e.g. "manual_bank_transfer"
+
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class PayoutLedgerRead(SQLModel):
+    id: int
+    booking_id: int
+    transaction_type: TransactionType
+    amount: float
+    description: str
+    tutor_paid: bool
+    created_at: datetime

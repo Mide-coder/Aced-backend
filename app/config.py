@@ -28,5 +28,15 @@ class Settings(BaseSettings):
     R2_SECRET_ACCESS_KEY: str = ""
     R2_BUCKET_NAME: str = "aced-uploads"
 
+    # Celery / Redis (Upstash Free Tier) [E004-S04]
+    REDIS_URL: str = "redis://localhost:6379/0"
+
+    # WhatsApp Cloud API [E004-S04]
+    WHATSAPP_ACCESS_TOKEN: str = ""
+    WHATSAPP_PHONE_NUMBER_ID: str = ""
+
+    # Frontend URL (for payment callbacks and public profiles)
+    FRONTEND_URL: str = "http://localhost:3000"
+
 
 settings = Settings()

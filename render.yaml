@@ -1,0 +1,56 @@
+# Render Blueprint Deployment Configuration
+# https://render.com/docs/blueprint-spec
+#
+# This configures:
+# - Web service for the FastAPI backend
+# - Health check pings every 14 min (Uptime Hack)
+# - Environment variables for NDPR-compliant data handling
+#
+# Deployment:
+#   1. Push to GitHub
+#   2. Connect repo to Render
+#   3. Render auto-detects this render.yaml
+#   4. Set secrets in Render Dashboard
+
+services:
+  - type: web
+    name: aced-api
+    runtime: python
+    plan: free
+    buildCommand: |-
+      pip install --upgrade pip
+      pip install uv
+      uv sync --locked --no-dev
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --workers 2 --limit-concurrency 100
+
+    # Health check — Render pings every 30s
+    healthCheckPath: /health
+
+    # Environment variables (set secrets in Render Dashboard)
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        sync: false  # Set manually — PostgreSQL connection string
+      - key: JWT_SECRET
+        sync: false  # Generate a long random string
+      - key: PAYSTACK_SECRET
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET_NAME
+        value: aced-uploads
+      - key: REDIS_URL
+        sync: false  # Upstash Redis URL
+      - key: WHATSAPP_ACCESS_TOKEN
+        sync: false
+      - key: WHATSAPP_PHONE_NUMBER_ID
+        sync: false
+      - key: FRONTEND_URL
+        value: https://aced.com
