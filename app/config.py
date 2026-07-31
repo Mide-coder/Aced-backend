@@ -2,7 +2,13 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    # env_ignore_empty: an empty OS-level env var (e.g. SENTRY_DSN="" set in
+    # the shell/Windows environment) must NOT override a real value in .env.
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_ignore_empty=True,
+    )
 
     # App
     ENVIRONMENT: str = "development"
