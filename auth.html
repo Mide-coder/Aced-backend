@@ -7,6 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <!-- Google Identity Services (Sign in with Google) -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   /* ─── Royal Naira Theme (default) ─── */
   :root{
@@ -657,8 +659,8 @@
 
         <div class="divider">or continue with</div>
         <div class="social-btns">
-          <button class="social-btn" onclick="createRipple(event)">🔵 Google</button>
-          <button class="social-btn" onclick="createRipple(event)">⚫ GitHub</button>
+          <button class="social-btn" type="button" onclick="handleGoogleSignIn()">🔵 Google</button>
+          <button class="social-btn" type="button" onclick="showToast('GitHub sign-in coming soon!')">⚫ GitHub</button>
         </div>
 
         <p class="auth-switch">
@@ -778,8 +780,8 @@
 
         <div class="divider">or continue with</div>
         <div class="social-btns">
-          <button class="social-btn" onclick="createRipple(event)">🔵 Google</button>
-          <button class="social-btn" onclick="createRipple(event)">⚫ GitHub</button>
+          <button class="social-btn" type="button" onclick="handleGoogleSignIn()">🔵 Google</button>
+          <button class="social-btn" type="button" onclick="showToast('GitHub sign-in coming soon!')">⚫ GitHub</button>
         </div>
 
         <p class="auth-switch">
@@ -851,6 +853,7 @@
   <button class="theme-fab" id="themeFab" aria-label="Switch color theme">🎨</button>
 </div>
 
+<script src="api.js"></script>
 <script>
   /* ══════════════════════════════════════════════
      UNIVERSITY DOMAIN DETECTION
@@ -1011,9 +1014,20 @@
   }
 
   /* ══════════════════════════════════════════════
-     LOGIN FORM
+     AUTH HELPER — redirect by role
      ══════════════════════════════════════════════ */
-  document.getElementById('loginForm')?.addEventListener('submit', function(e) {
+  function redirectAfterAuth(user) {
+    if (user && user.role === 'tutor') {
+      window.location.href = 'tutor-dashboard.html';
+    } else {
+      window.location.href = 'dashboard.html';
+    }
+  }
+
+  /* ══════════════════════════════════════════════
+     LOGIN FORM — real API
+     ══════════════════════════════════════════════ */
+  document.getElementById('loginForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
@@ -1025,22 +1039,25 @@
     if (!validateEmail(email)) { showError('loginEmail', 'loginEmailError'); valid = false; }
     if (!password) { showError('loginPassword', 'loginPasswordError'); valid = false; }
 
-    if (valid) {
-      const btn = document.getElementById('loginBtn');
-      btn.classList.add('loading');
-      btn.disabled = true;
-      setTimeout(() => {
-        btn.classList.remove('loading');
-        btn.disabled = false;
-        alert('Login successful! (Demo — backend integration pending)');
-      }, 1800);
+    if (!valid) return;
+
+    const btn = document.getElementById('loginBtn');
+    btn.classList.add('loading');
+    btn.disabled = true;
+    try {
+      const user = await loginUser(email, password);
+      redirectAfterAuth(user);
+    } catch (err) {
+      alert(err.message || 'Login failed. Please try again.');
+      btn.classList.remove('loading');
+      btn.disabled = false;
     }
   });
 
   /* ══════════════════════════════════════════════
-     REGISTER FORM
+     REGISTER FORM — real API
      ══════════════════════════════════════════════ */
-  document.getElementById('registerForm')?.addEventListener('submit', function(e) {
+  document.getElementById('registerForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     const name = document.getElementById('regName').value.trim();
     const email = document.getElementById('regEmail').value.trim();
@@ -1048,6 +1065,7 @@
     const password = document.getElementById('regPassword').value;
     const confirm = document.getElementById('regConfirm').value;
     const agreed = document.getElementById('agreeTerms').checked;
+    const role = document.getElementById('regRole').value;
     let valid = true;
 
     ['regName','regEmail','regPassword','regConfirm'].forEach(id => clearError(id, id + 'Error'));
@@ -1063,17 +1081,101 @@
       document.getElementById('regTermsError').classList.remove('show');
     }
 
-    if (valid) {
-      const btn = document.getElementById('registerBtn');
-      btn.classList.add('loading');
-      btn.disabled = true;
-      setTimeout(() => {
-        btn.classList.remove('loading');
-        btn.disabled = false;
-        alert('Registration successful! (Demo — backend integration pending)');
-      }, 1800);
+    if (!valid) return;
+
+    const btn = document.getElementById('registerBtn');
+    btn.classList.add('loading');
+    btn.disabled = true;
+    try {
+      await registerUser({
+        email, password, full_name: name, role,
+        phone: phone || '',
+      });
+      // Auto sign-in after successful registration
+      const user = await loginUser(email, password);
+      redirectAfterAuth(user);
+    } catch (err) {
+      alert(err.message || 'Registration failed. Please try again.');
+      btn.classList.remove('loading');
+      btn.disabled = false;
     }
   });
+
+  /* ══════════════════════════════════════════════
+     TOAST
+     ══════════════════════════════════════════════ */
+  function showToast(msg, type = 'info') {
+    let t = document.getElementById('authToast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'authToast';
+      t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9000;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;color:#fff;opacity:0;transition:opacity .3s;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.18);';
+      document.body.appendChild(t);
+    }
+    t.style.background = type === 'error' ? '#ef4444' : type === 'success' ? '#10b981' : '#1e40af';
+    t.textContent = msg;
+    t.style.opacity = '1';
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => { t.style.opacity = '0'; }, 3500);
+  }
+
+  /* ══════════════════════════════════════════════
+     GOOGLE SIGN-IN (Google Identity Services)
+     ══════════════════════════════════════════════ */
+  function getGoogleClientId() {
+    return window.ACED_GOOGLE_CLIENT_ID || '';
+  }
+
+  // Fetch the Google Client ID from the backend once on page load.
+  // Stored as a promise so handleGoogleSignIn can await it — avoids a race
+  // where the user clicks the button before the config arrives.
+  window.ACED_GOOGLE_CONFIG_PROMISE = (async function initGoogleConfig() {
+    try {
+      const config = await apiRequest('/auth/google-config', { useAuth: false });
+      if (config && config.client_id) window.ACED_GOOGLE_CLIENT_ID = config.client_id;
+    } catch (e) { /* backend offline — button will show a helpful message */ }
+  })();
+
+  async function handleGoogleSignIn() {
+    // Wait for the config fetch (if still in flight) before reading the client ID
+    if (window.ACED_GOOGLE_CONFIG_PROMISE) {
+      try { await window.ACED_GOOGLE_CONFIG_PROMISE; } catch (e) {}
+    }
+    const clientId = getGoogleClientId();
+    if (!clientId) {
+      alert('Google sign-in is not configured yet. Ask the developer to add the Google Client ID.');
+      return;
+    }
+    if (!window.google || !window.google.accounts) {
+      alert('Google Identity Services failed to load. Check your connection and try again.');
+      return;
+    }
+    // Initialize GIS only once (double-click / cancel→retry must not re-init).
+    // The role is read INSIDE the callback (at response time) so a Google
+    // sign-in always uses the role selected on the active tab — never a stale
+    // value captured when the button was first clicked.
+    if (!window._acedGisInitialized) {
+      google.accounts.id.initialize({
+        client_id: clientId,
+        callback: async (response) => {
+          // Role only applies to brand-new sign-ups: default to student on the
+          // login tab, honor a tutor selection made on the register tab.
+          const onLoginTab = document.getElementById('page-login').classList.contains('active');
+          const role = onLoginTab ? 'student'
+            : (document.getElementById('regRole') ? document.getElementById('regRole').value : 'student');
+          try {
+            const user = await googleSignIn(response.credential, role);
+            redirectAfterAuth(user);
+          } catch (err) {
+            alert(err.message || 'Google sign-in failed.');
+          }
+        },
+        auto_select: false,
+      });
+      window._acedGisInitialized = true;
+    }
+    google.accounts.id.prompt();
+  }
 
   /* ══════════════════════════════════════════════
      FORGOT PASSWORD FORM

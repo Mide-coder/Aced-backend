@@ -1,7 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
+from pydantic import BaseModel
 from sqlmodel import Session, select
 from datetime import timezone, datetime
+
+from google.oauth2 import id_token as google_id_token
+from google.auth.transport import requests as google_requests
 
 from app.database import get_session
 from app.models import User, UserCreate, UserRead, detect_university_from_email
@@ -19,6 +23,97 @@ from app.config import settings
 from app.rate_limit import limiter
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
+
+
+# ── Google OAuth (Sign in with Google) ────────────────────────────────────────
+
+@router.get("/google-config")
+async def google_config():
+    """Public client ID for the Google sign-in button."""
+    return {"client_id": settings.GOOGLE_CLIENT_ID}
+
+
+class GoogleTokenIn(BaseModel):
+    """ID token from Google Identity Services + optional role for new signups."""
+    credential: str
+    role: str = "student"  # used only when creating a brand-new account
+
+
+@router.post("/google")
+@limiter.limit("10/minute")
+async def google_login(
+    request: Request,
+    body: GoogleTokenIn,
+    session: Session = Depends(get_session),
+):
+    """
+    Verify a Google ID token and sign the user in.
+    - Creates an account automatically on first sign-in
+    - Issues the same JWT access/refresh pair as email login
+    """
+    if not settings.GOOGLE_CLIENT_ID:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Google sign-in is not configured on the server yet",
+        )
+
+    try:
+        info = google_id_token.verify_oauth2_token(
+            body.credential,
+            google_requests.Request(),
+            settings.GOOGLE_CLIENT_ID,
+        )
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Google credential",
+        )
+
+    email = info.get("email")
+    if not email:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Google account has no email address",
+        )
+
+    # Never create an account with an unverified Google email
+    if not info.get("email_verified", False):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Google account email is not verified",
+        )
+
+    user = session.exec(select(User).where(User.email == email)).first()
+
+    if not user:
+        # Auto-create account on first sign-in
+        name = info.get("name") or email.split("@")[0]
+        role = body.role if body.role in ("student", "tutor") else "student"
+        university = detect_university_from_email(email)
+        user = User(
+            email=email,
+            full_name=name,
+            role=role,
+            university=university,
+            hashed_password="",  # Google users don't have a password
+            is_verified=university is not None,
+        )
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is inactive",
+        )
+
+    token_data = {"sub": str(user.id), "role": user.role, "email": user.email}
+    return {
+        "access_token": create_access_token(token_data),
+        "refresh_token": create_refresh_token(token_data),
+        "token_type": "bearer",
+    }
 
 
 # ── Register ──────────────────────────────────────────────────────────────────

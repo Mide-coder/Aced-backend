@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     # Paystack
     PAYSTACK_SECRET: str = ""
 
+    # Google OAuth (Sign in with Google)
+    GOOGLE_CLIENT_ID: str = ""
+
     # Sentry
     SENTRY_DSN: str = ""
 

@@ -21,7 +21,17 @@ def hash_password(plain_password: str) -> str:
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
+    """Check a plaintext password against a stored bcrypt hash.
+
+    Returns False for empty/malformed hashes (e.g. Google-created accounts
+    which have no password) instead of raising, so login returns a clean 401.
+    """
+    if not hashed_password:
+        return False
+    try:
+        return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
+    except ValueError:
+        return False
 
 
 # ── Token Helpers ─────────────────────────────────────────────────────────────

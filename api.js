@@ -184,6 +184,22 @@ async function loginUser(email, password) {
   throw new Error('Login failed — no token returned');
 }
 
+async function googleSignIn(credential, role = 'student') {
+  const result = await apiRequest('/auth/google', {
+    method: 'POST',
+    body: { credential, role },
+    useAuth: false,
+  });
+
+  if (result.access_token) {
+    saveTokens(result.access_token, result.refresh_token);
+    const user = await getMe();
+    saveUser(user);
+    return user;
+  }
+  throw new Error('Google sign-in failed — no token returned');
+}
+
 async function logoutUser() {
   const refresh = getRefreshToken();
   try {
