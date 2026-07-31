@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aced — Student Dashboard</title>
+<link rel="icon" type="image/png" href="assets/aced-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ══════════════════════════════════════════════
+     THEME TOKENS
+     ══════════════════════════════════════════════ */
+  :root{
+    --primary-start:#1e40af;
+    --primary-end:#1d4ed8;
+    --secondary:#3b82f6;
+    --accent:#f97316;
+    --success:#10b981;
+    --warning:#f59e0b;
+    --error:#ef4444;
+    --gradient:linear-gradient(120deg,var(--primary-start),var(--primary-end));
+  }
+  [data-theme="blue"]{}
+  [data-theme="purple"]{
+    --primary-start:#667eea;
+    --primary-end:#764ba2;
+    --secondary:#8b5cf6;
+    --accent:#10b981;
+    --gradient:linear-gradient(120deg,var(--primary-start),var(--primary-end));
+  }
+  [data-theme="green"]{
+    --primary-start:#059669;
+    --primary-end:#047857;
+    --secondary:#34d399;
+    --accent:#f59e0b;
+    --gradient:linear-gradient(120deg,var(--primary-start),var(--primary-end));
+  }
+
+  :root{
+    --ink-900:#111827;
+    --ink-800:#1f2937;
+    --ink-700:#374151;
+    --ink-600:#4b5563;
+    --ink-500:#6b7280;
+    --ink-400:#9ca3af;
+    --ink-300:#d1d5db;
+    --ink-200:#e5e7eb;
+    --ink-100:#f3f4f6;
+    --ink-50:#f9fafb;
+    --bg:#f8f9fc;
+    --bg-card:#ffffff;
+    --line:#e8ecf0;
+    --radius:12px;
+    --radius-sm:8px;
+    --radius-lg:16px;
+    --shadow-xs:0 1px 2px rgba(0,0,0,0.04);
+    --shadow-sm:0 2px 8px rgba(31,41,55,0.06);
+    --shadow-md:0 8px 24px rgba(31,41,55,0.10);
+    --shadow-lg:0 16px 40px rgba(31,41,55,0.14);
+    --ease:cubic-bezier(.4,0,.2,1);
+    --sidebar-w:260px;
+    --header-h:64px;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{height:100%;}
+  body{
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    color:var(--ink-800);
+    background:var(--bg);
+    line-height:1.5;
+    min-height:100%;
+    overflow-x:hidden;
+  }
+  a{text-decoration:none;color:inherit;}
+  button{font-family:inherit;border:none;cursor:pointer;background:none;}
+  input,select{font-family:inherit;}
+  ul{list-style:none;}
+
+  ::selection{background:var(--secondary);color:#fff;}
+  :focus-visible{outline:2px solid var(--primary-end);outline-offset:2px;}
+
+  /* ══════════════════════════════════════════════
+     SIDEBAR
+     ══════════════════════════════════════════════ */
+  .sidebar{
+    position:fixed;
+    top:0;left:0;bottom:0;
+    width:var(--sidebar-w);
+    background:var(--gradient);
+    z-index:1000;
+    display:flex;
+    flex-direction:column;
+    transition:transform 0.35s var(--ease);
+  }
+  .sidebar-brand{
+    padding:18px 20px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    border-bottom:1px solid rgba(255,255,255,0.1);
+  }
+  .sidebar-user{
+    padding:16px 20px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+  }
+  .sidebar-avatar{
+    width:40px;height:40px;border-radius:50%;
+    background:rgba(255,255,255,0.2);
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-weight:700;font-size:15px;
+    flex-shrink:0;
+  }
+  .sidebar-user-info{flex:1;min-width:0;}
+  .sidebar-user-info .name{
+    font-size:14px;font-weight:600;color:#fff;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .sidebar-user-info .role{
+    font-size:11.5px;color:rgba(255,255,255,0.5);
+    font-weight:500;
+  }
+  .sidebar-nav{
+    flex:1;
+    padding:12px 12px;
+    overflow-y:auto;
+  }
+  .sidebar-nav-label{
+    font-size:10.5px;font-weight:700;
+    text-transform:uppercase;letter-spacing:0.08em;
+    color:rgba(255,255,255,0.3);
+    padding:16px 12px 6px;
+  }
+  .sidebar-link{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:10px 12px;
+    border-radius:10px;
+    font-size:14px;
+    font-weight:500;
+    color:rgba(255,255,255,0.6);
+    transition:all 0.2s var(--ease);
+    margin-bottom:2px;
+    position:relative;
+  }
+  .sidebar-link:hover{color:#fff;background:rgba(255,255,255,0.08);}
+  .sidebar-link.active{
+    color:#fff;
+    background:rgba(255,255,255,0.15);
+    font-weight:600;
+  }
+  .sidebar-link .icon{font-size:16px;width:22px;text-align:center;}
+  .sidebar-link .badge{
+    margin-left:auto;
+    background:var(--accent);
+    color:#fff;
+    font-size:11px;font-weight:700;
+    padding:2px 8px;
+    border-radius:999px;
+  }
+  .sidebar-footer{
+    padding:12px 12px;
+    border-top:1px solid rgba(255,255,255,0.08);
+  }
+  .sidebar-footer .sidebar-link{font-size:13px;}
+
+  /* ══════════════════════════════════════════════
+     MAIN LAYOUT
+     ══════════════════════════════════════════════ */
+  .main{
+    margin-left:var(--sidebar-w);
+    min-height:100vh;
+  }
+
+  /* ══════════════════════════════════════════════
+     HEADER
+     ══════════════════════════════════════════════ */
+  .header{
+    height:var(--header-h);
+    background:var(--bg-card);
+    border-bottom:1px solid var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 28px;
+    position:sticky;
+    top:0;
+    z-index:500;
+  }
+  .header-left{display:flex;align-items:center;gap:16px;}
+  .header h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:18px;font-weight:700;
+    color:var(--ink-800);
+  }
+  .header-search{
+    display:flex;align-items:center;
+    background:var(--ink-50);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:0 12px;
+    width:280px;
+    transition:border-color 0.25s var(--ease);
+  }
+  .header-search:focus-within{border-color:var(--primary-start);}
+  .header-search .search-icon{color:var(--ink-400);font-size:14px;margin-right:8px;}
+  .header-search input{
+    border:none;outline:none;
+    background:transparent;
+    padding:9px 0;
+    font-size:13.5px;
+    color:var(--ink-800);
+    width:100%;
+  }
+  .header-search input::placeholder{color:var(--ink-400);}
+  .header-right{display:flex;align-items:center;gap:12px;}
+  .header-btn{
+    width:36px;height:36px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    color:var(--ink-500);
+    font-size:18px;
+    transition:background 0.2s var(--ease);
+    position:relative;
+  }
+  .header-btn:hover{background:var(--ink-100);}
+  .header-btn .dot{
+    position:absolute;top:6px;right:6px;
+    width:8px;height:8px;border-radius:50%;
+    background:var(--error);
+    border:2px solid var(--bg-card);
+  }
+  .header-avatar{
+    width:34px;height:34px;border-radius:50%;
+    background:var(--gradient);
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-weight:700;font-size:13px;
+    cursor:pointer;
+  }
+
+  /* ─── Mobile menu toggle ─── */
+  .menu-toggle{
+    display:none;
+    width:36px;height:36px;border-radius:8px;
+    align-items:center;justify-content:center;
+    color:var(--ink-600);
+    font-size:20px;
+    background:var(--ink-50);
+    border:1px solid var(--line);
+  }
+
+  /* ══════════════════════════════════════════════
+     CONTENT
+     ══════════════════════════════════════════════ */
+  .content{padding:24px 28px;}
+
+  .page-section{
+    display:none;
+    animation:fadeSlideIn 0.4s var(--ease);
+  }
+  .page-section.active{display:block;}
+  @keyframes fadeSlideIn{
+    from{opacity:0;transform:translateY(10px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+
+  .section-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:20px;
+    flex-wrap:wrap;
+    gap:12px;
+  }
+  .section-header h2{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:20px;font-weight:700;
+  }
+  .section-header p{font-size:14px;color:var(--ink-400);margin-top:2px;}
+
+  /* ══════════════════════════════════════════════
+     STATS CARDS
+     ══════════════════════════════════════════════ */
+  .stats-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:16px;
+    margin-bottom:28px;
+  }
+  .stat-card{
+    background:var(--bg-card);
+    border-radius:var(--radius);
+    padding:20px;
+    border:1px solid var(--line);
+    transition:transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+  }
+  .stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
+  .stat-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .stat-icon{
+    width:40px;height:40px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;
+  }
+  .stat-icon.blue{background:color-mix(in srgb, var(--primary-start) 10%, white);}
+  .stat-icon.green{background:color-mix(in srgb, var(--success) 10%, white);}
+  .stat-icon.orange{background:color-mix(in srgb, var(--accent) 12%, white);}
+  .stat-icon.purple{background:color-mix(in srgb, var(--secondary) 10%, white);}
+  .stat-trend{
+    font-size:12px;font-weight:700;
+    padding:3px 8px;border-radius:999px;
+  }
+  .stat-trend.up{background:color-mix(in srgb, var(--success) 12%, white);color:var(--success);}
+  .stat-trend.down{background:color-mix(in srgb, var(--error) 12%, white);color:var(--error);}
+  .stat-number{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:28px;font-weight:700;
+  }
+  .stat-label{font-size:13px;color:var(--ink-400);margin-top:2px;}
+
+  /* ══════════════════════════════════════════════
+     SEARCH & FILTERS
+     ══════════════════════════════════════════════ */
+  .search-section{
+    background:var(--bg-card);
+    border-radius:var(--radius);
+    border:1px solid var(--line);
+    padding:24px;
+    margin-bottom:24px;
+  }
+  .search-bar{
+    display:flex;
+    gap:12px;
+    margin-bottom:16px;
+    flex-wrap:wrap;
+  }
+  .search-bar .form-input{
+    flex:1;min-width:200px;
+    padding:12px 16px;
+    border:2px solid var(--line);
+    border-radius:var(--radius-sm);
+    font-size:14px;
+    color:var(--ink-800);
+    background:#fff;
+    transition:border-color 0.25s var(--ease);
+  }
+  .search-bar .form-input:focus{
+    border-color:var(--primary-start);
+    box-shadow:0 0 0 3px color-mix(in srgb, var(--primary-start) 12%, transparent);
+    outline:none;
+  }
+  .search-bar .btn{
+    width:auto;
+    padding:12px 24px;
+    white-space:nowrap;
+  }
+  .filter-row{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+  .filter-chip{
+    display:flex;align-items:center;gap:6px;
+    padding:7px 14px;
+    border-radius:999px;
+    font-size:13px;font-weight:600;
+    border:1px solid var(--line);
+    color:var(--ink-600);
+    cursor:pointer;
+    transition:all 0.2s var(--ease);
+    background:#fff;
+  }
+  .filter-chip:hover{border-color:var(--primary-start);color:var(--primary-end);}
+  .filter-chip.active{
+    background:var(--gradient);
+    color:#fff;
+    border-color:transparent;
+  }
+  .filter-chip select{
+    border:none;outline:none;
+    background:transparent;
+    font-family:inherit;
+    font-size:13px;font-weight:600;
+    color:inherit;
+    cursor:pointer;
+  }
+
+  /* ══════════════════════════════════════════════
+     TUTOR CARDS (Search Results)
+     ══════════════════════════════════════════════ */
+  .tutor-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));
+    gap:16px;
+    margin-top:16px;
+  }
+  .tutor-card{
+    background:var(--bg-card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:20px;
+    transition:transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+  }
+  .tutor-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);}
+  .tutor-card-top{display:flex;gap:14px;margin-bottom:14px;}
+  .tutor-avatar{
+    width:52px;height:52px;border-radius:50%;
+    background:var(--gradient);
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-weight:700;font-size:18px;
+    flex-shrink:0;
+  }
+  .tutor-info{flex:1;min-width:0;}
+  .tutor-info h4{font-size:16px;font-weight:700;}
+  .tutor-info .uni{font-size:12.5px;color:var(--ink-400);margin-top:1px;}
+  .tutor-meta{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+  .tutor-meta span{
+    font-size:12px;color:var(--ink-500);
+    display:flex;align-items:center;gap:4px;
+  }
+  .tutor-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+  .tutor-tag{
+    font-size:11px;font-weight:600;
+    padding:4px 10px;border-radius:999px;
+    background:color-mix(in srgb, var(--primary-start) 8%, white);
+    color:var(--primary-end);
+  }
+  .tutor-tag.grade{background:color-mix(in srgb, var(--success) 10%, white);color:var(--success);}
+  .tutor-card-bottom{
+    display:flex;align-items:center;justify-content:space-between;
+    padding-top:14px;border-top:1px solid var(--line);
+  }
+  .tutor-price{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:20px;font-weight:700;
+  }
+  .tutor-price span{font-size:13px;font-weight:500;color:var(--ink-400);}
+  .tutor-card-bottom .btn{width:auto;padding:8px 18px;font-size:13px;}
+
+  /* ══════════════════════════════════════════════
+     BOOKING CARDS
+     ══════════════════════════════════════════════ */
+  .booking-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(340px, 1fr));
+    gap:16px;
+  }
+  .booking-card{
+    background:var(--bg-card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:20px;
+    transition:transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+  }
+  .booking-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
+  .booking-header{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    margin-bottom:12px;
+  }
+  .booking-header h4{font-size:15px;font-weight:700;}
+  .status-badge{
+    font-size:11px;font-weight:700;
+    padding:4px 10px;border-radius:999px;
+  }
+  .status-badge.confirmed{background:color-mix(in srgb, var(--success) 12%, white);color:var(--success);}
+  .status-badge.pending{background:color-mix(in srgb, var(--warning) 12%, white);color:var(--warning);}
+  .status-badge.completed{background:color-mix(in srgb, var(--secondary) 12%, white);color:var(--secondary);}
+  .status-badge.cancelled{background:color-mix(in srgb, var(--error) 12%, white);color:var(--error);}
+  .booking-detail{font-size:13.5px;color:var(--ink-500);margin-bottom:4px;display:flex;align-items:center;gap:6px;}
+  .booking-countdown{
+    margin:14px 0;
+    padding:12px;
+    background:color-mix(in srgb, var(--accent) 8%, white);
+    border-radius:var(--radius-sm);
+    display:flex;justify-content:space-around;text-align:center;
+  }
+  .countdown-unit .num{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:22px;font-weight:700;
+    color:var(--ink-800);
+  }
+  .countdown-unit .label{
+    font-size:10px;font-weight:600;
+    color:var(--ink-400);
+    text-transform:uppercase;
+  }
+  .booking-actions{display:flex;gap:8px;margin-top:12px;}
+  .booking-actions .btn{width:auto;padding:8px 16px;font-size:13px;}
+
+  /* ══════════════════════════════════════════════
+     SESSION HISTORY TABLE
+     ══════════════════════════════════════════════ */
+  .history-table-wrap{
+    background:var(--bg-card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+  }
+  .history-table{
+    width:100%;
+    border-collapse:collapse;
+  }
+  .history-table thead th{
+    text-align:left;
+    padding:12px 18px;
+    font-size:12px;font-weight:700;
+    text-transform:uppercase;letter-spacing:0.04em;
+    color:var(--ink-400);
+    background:var(--ink-50);
+    border-bottom:1px solid var(--line);
+  }
+  .history-table tbody td{
+    padding:14px 18px;
+    font-size:14px;
+    border-bottom:1px solid var(--line);
+  }
+  .history-table tbody tr:last-child td{border-bottom:none;}
+  .history-table tbody tr{transition:background 0.2s var(--ease);}
+  .history-table tbody tr:hover{background:var(--ink-50);}
+  .history-table .td-tutor{display:flex;align-items:center;gap:10px;}
+  .history-table .td-tutor .mini-avatar{
+    width:28px;height:28px;border-radius:50%;
+    background:var(--gradient);
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:11px;font-weight:700;
+  }
+  .history-table .stars{color:var(--warning);font-size:14px;}
+
+  /* ══════════════════════════════════════════════
+     TUTOR RECOMMENDATIONS
+     ══════════════════════════════════════════════ */
+  .recommend-scroll{
+    display:flex;
+    gap:16px;
+    overflow-x:auto;
+    padding-bottom:8px;
+    scrollbar-width:thin;
+    scrollbar-color:var(--line) transparent;
+  }
+  .recommend-scroll::-webkit-scrollbar{height:6px;}
+  .recommend-scroll::-webkit-scrollbar-track{background:transparent;}
+  .recommend-scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}
+  .recommend-card{
+    flex:0 0 260px;
+    background:var(--bg-card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:20px;
+    text-align:center;
+    transition:transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+  }
+  .recommend-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);}
+  .recommend-card .avatar-lg{
+    width:60px;height:60px;border-radius:50%;
+    background:var(--gradient);
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-weight:700;font-size:22px;
+    margin:0 auto 12px;
+  }
+  .recommend-card h4{font-size:15px;font-weight:700;}
+  .recommend-card .uni{font-size:12px;color:var(--ink-400);margin:2px 0 8px;}
+  .recommend-card .rating{font-size:13px;margin-bottom:8px;}
+  .recommend-card .subjects{
+    font-size:12px;color:var(--ink-500);
+    margin-bottom:14px;
+  }
+  .recommend-card .btn{width:auto;padding:8px 18px;font-size:13px;}
+
+  /* ══════════════════════════════════════════════
+     BUTTONS
+     ══════════════════════════════════════════════ */
+  .btn{
+    position:relative;overflow:hidden;
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:12px 24px;
+    border-radius:var(--radius-sm);
+    font-weight:700;font-size:14px;
+    transition:transform 0.25s var(--ease), box-shadow 0.25s var(--ease), background 0.25s var(--ease);
+  }
+  .btn:hover{transform:translateY(-1px);}
+  .btn:active{transform:translateY(0);}
+  .btn-primary{
+    background:var(--gradient);color:#fff;
+    box-shadow:0 6px 16px -4px color-mix(in srgb, var(--primary-end) 50%, transparent);
+  }
+  .btn-primary:hover{box-shadow:0 10px 24px -4px color-mix(in srgb, var(--primary-end) 60%, transparent);}
+  .btn-outline{
+    background:transparent;color:var(--ink-700);
+    border:2px solid var(--line);
+  }
+  .btn-outline:hover{border-color:var(--primary-start);color:var(--primary-end);}
+  .btn-sm{padding:8px 16px;font-size:13px;}
+
+  .ripple{
+    position:absolute;border-radius:50%;
+    background:rgba(255,255,255,0.45);
+    transform:scale(0);
+    animation:rippleAnim 0.6s var(--ease);
+    pointer-events:none;
+  }
+  @keyframes rippleAnim{to{transform:scale(3);opacity:0;}}
+
+  /* ══════════════════════════════════════════════
+     EMPTY STATE
+     ══════════════════════════════════════════════ */
+  .empty-state{
+    text-align:center;
+    padding:48px 20px;
+    color:var(--ink-400);
+  }
+  .empty-state .icon{font-size:40px;margin-bottom:12px;}
+  .empty-state h3{font-size:16px;color:var(--ink-700);margin-bottom:6px;}
+  .empty-state p{font-size:14px;}
+
+  /* ══════════════════════════════════════════════
+     THEME SWITCHER
+     ══════════════════════════════════════════════ */
+  .theme-switcher{
+    position:fixed;bottom:20px;right:20px;z-index:2000;
+    display:flex;flex-direction:column;align-items:flex-end;gap:10px;
+  }
+  .theme-fab{
+    width:44px;height:44px;border-radius:50%;
+    background:var(--gradient);
+    box-shadow:0 4px 16px rgba(0,0,0,0.2);
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;color:#fff;
+    transition:transform 0.4s var(--ease);
+    cursor:pointer;
+  }
+  .theme-fab.open{transform:rotate(135deg);}
+  .theme-panel{
+    background:#fff;border-radius:14px;box-shadow:var(--shadow-lg);
+    padding:12px;border:1px solid var(--line);width:190px;
+    display:flex;flex-direction:column;gap:6px;
+    transform:translateY(10px) scale(0.96);opacity:0;pointer-events:none;
+    transition:transform 0.3s var(--ease), opacity 0.3s var(--ease);
+  }
+  .theme-panel.open{transform:translateY(0) scale(1);opacity:1;pointer-events:auto;}
+  .theme-panel-title{
+    font-size:11px;font-weight:700;text-transform:uppercase;
+    color:var(--ink-400);letter-spacing:0.06em;padding:2px 4px 6px;
+  }
+  .theme-opt{
+    display:flex;align-items:center;gap:8px;
+    padding:8px;border-radius:8px;
+    font-size:13px;font-weight:600;cursor:pointer;
+    transition:background 0.2s var(--ease);
+  }
+  .theme-opt:hover{background:var(--ink-50);}
+  .theme-opt.active{background:var(--ink-50);}
+  .swatch{width:16px;height:16px;border-radius:5px;flex-shrink:0;}
+  .theme-opt.active::after{content:"✓";margin-left:auto;color:var(--primary-end);font-weight:700;}
+
+  /* ══════════════════════════════════════════════
+     RESPONSIVE
+     ══════════════════════════════════════════════ */
+  @media (max-width:1199px){
+    .stats-grid{grid-template-columns:repeat(2,1fr);}
+  }
+  @media (max-width:991px){
+    .sidebar{transform:translateX(-100%);}
+    .sidebar.open{transform:translateX(0);}
+    .main{margin-left:0;}
+    .menu-toggle{display:flex;}
+    .content{padding:16px;}
+    .header{padding:0 16px;}
+    .header-search{width:200px;}
+    .booking-grid{grid-template-columns:1fr;}
+  }
+  @media (max-width:767px){
+    .stats-grid{grid-template-columns:1fr;}
+    .tutor-grid{grid-template-columns:1fr;}
+    .section-header{flex-direction:column;align-items:flex-start;}
+    .search-bar{flex-direction:column;}
+    .search-bar .btn{width:100%;}
+    .filter-row{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px;}
+    .filter-chip{white-space:nowrap;}
+    .header h1{font-size:15px;}
+    .header-search{width:140px;}
+    .header-search input{font-size:12px;}
+    .history-table-wrap{overflow-x:auto;}
+    .history-table{font-size:13px;}
+    .history-table thead th,.history-table tbody td{padding:10px 12px;}
+  }
+  @media (max-width:480px){
+    .content{padding:12px;}
+    .header{padding:0 12px;height:58px;}
+    .header-search{width:110px;}
+    .header-right .header-btn:nth-child(2){display:none;}
+    .booking-countdown{gap:8px;}
+    .countdown-unit .num{font-size:18px;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:0.001ms !important;transition-duration:0.001ms !important;scroll-behavior:auto !important;}
+  }
+</style>
+</head>
+<body data-theme="blue">
+
+<!-- ═══════════════ SIDEBAR ═══════════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <img src="assets/aced-logo.png" alt="Aced logo" height="24">
+  </div>
+  <div class="sidebar-user">
+    <div class="sidebar-avatar" id="sidebarAvatar">—</div>
+    <div class="sidebar-user-info">
+      <div class="name" id="sidebarName">Loading…</div>
+      <div class="role" id="sidebarRole">Student</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="sidebar-nav-label">Main</div>
+    <a class="sidebar-link active" data-page="dashboard" onclick="switchPage('dashboard', this)">
+      <span class="icon">📊</span> Dashboard
+    </a>
+    <a class="sidebar-link" data-page="search" onclick="switchPage('search', this)">
+      <span class="icon">🔍</span> Find Tutors
+    </a>
+    <a class="sidebar-link" data-page="bookings" onclick="switchPage('bookings', this)">
+      <span class="icon">📅</span> My Bookings
+      <span class="badge" id="bookingBadge" style="display:none;">0</span>
+    </a>
+    <a class="sidebar-link" data-page="history" onclick="switchPage('history', this)">
+      <span class="icon">📋</span> Session History
+    </a>
+
+    <div class="sidebar-nav-label">Account</div>
+    <a class="sidebar-link" data-page="profile" onclick="switchPage('profile', this)">
+      <span class="icon">👤</span> My Profile
+    </a>
+    <a class="sidebar-link" data-page="settings" onclick="switchPage('settings', this)">
+      <span class="icon">⚙️</span> Settings
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <a class="sidebar-link" href="auth.html">
+      <span class="icon">🚪</span> Sign Out
+    </a>
+  </div>
+</aside>
+
+<!-- ═══════════════ MAIN ═══════════════ -->
+<div class="main">
+  <!-- ─── Header ─── -->
+  <header class="header">
+    <div class="header-left">
+      <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">☰</button>
+      <h1 id="pageTitle">Dashboard</h1>
+    </div>
+    <div class="header-search">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="Search dashboard..." aria-label="Search across dashboard">
+    </div>
+    <div class="header-right">
+      <button class="header-btn" aria-label="Notifications">
+        🔔
+        <span class="dot"></span>
+      </button>
+      <button class="header-btn" aria-label="Messages">💬</button>
+      <div class="header-avatar" id="headerAvatar">—</div>
+    </div>
+  </header>
+
+  <!-- ─── Content ─── -->
+  <div class="content">
+
+    <!-- ════ DASHBOARD PAGE ════ -->
+    <div class="page-section active" id="page-dashboard">
+      <div class="section-header">
+        <div>
+          <h2 id="greeting">Good morning 👋</h2>
+          <p id="greetingSub">Loading your sessions…</p>
+        </div>
+        <a href="#page-search" class="btn btn-primary btn-sm" onclick="switchPage('search', document.querySelector('[data-page=search]'))">Find a Tutor</a>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-icon blue">📅</div>
+            <span class="stat-trend up">+2 this week</span>
+          </div>
+          <div class="stat-number" id="statUpcoming">0</div>
+          <div class="stat-label">Upcoming Sessions</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-icon green">✅</div>
+            <span class="stat-trend up">+12 total</span>
+          </div>
+          <div class="stat-number" id="statCompleted">0</div>
+          <div class="stat-label">Sessions Completed</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-icon orange">⭐</div>
+            <span class="stat-trend up">+0.2</span>
+          </div>
+          <div class="stat-number" id="statRating">0.0</div>
+          <div class="stat-label">Average Rating</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-icon purple">💳</div>
+            <span class="stat-trend up">₦0</span>
+          </div>
+          <div class="stat-number" id="statSpent">₦0</div>
+          <div class="stat-label">Total Spent</div>
+        </div>
+      </div>
+
+      <!-- Next Session -->
+      <div style="margin-bottom:24px;">
+        <div class="section-header"><h2>Next Session</h2></div>
+        <div id="nextSessionCard" class="booking-card">
+          <div class="empty-state" style="padding:20px;"><div class="icon">📅</div><p>No upcoming sessions yet.</p></div>
+        </div>
+      </div>
+
+      <!-- Recommended Tutors -->
+      <div>
+        <div class="section-header">
+          <h2>Recommended for You</h2>
+          <p>Based on your courses</p>
+        </div>
+        <div class="recommend-scroll" id="recommendScroll"></div>
+      </div>
+    </div>
+
+    <!-- ════ FIND TUTORS PAGE ════ -->
+    <div class="page-section" id="page-search">
+      <div class="section-header">
+        <div>
+          <h2>Find a Tutor</h2>
+          <p>Search by course code, subject, or tutor name.</p>
+        </div>
+      </div>
+
+      <div class="search-section">
+        <div class="search-bar">
+          <input type="text" class="form-input" id="searchInput" placeholder="Search course code or subject e.g. CSC201, Statistics..." aria-label="Search tutors">
+          <button class="btn btn-primary" onclick="applyFilters()">Search</button>
+        </div>
+        <div class="filter-row">            <span class="filter-chip active" data-filter="level" data-value="all" onclick="toggleFilter(this)">All Levels</span>
+            <span class="filter-chip" data-filter="level" data-value="100" onclick="toggleFilter(this)">100 Level</span>
+            <span class="filter-chip" data-filter="level" data-value="200" onclick="toggleFilter(this)">200 Level</span>
+            <span class="filter-chip" data-filter="level" data-value="300" onclick="toggleFilter(this)">300 Level</span>
+            <span class="filter-chip" data-filter="level" data-value="400" onclick="toggleFilter(this)">400 Level</span>
+            <span class="filter-chip" data-filter="price">
+              Price
+              <select aria-label="Price range" onchange="applyFilters()">
+                <option value="any">Any</option>
+                <option value="low">₦1,000 – ₦2,500</option>
+                <option value="mid">₦2,500 – ₦4,000</option>
+                <option value="high">₦4,000+</option>
+              </select>
+            </span>
+            <span class="filter-chip" data-filter="rating">
+              Rating
+              <select aria-label="Minimum rating" onchange="applyFilters()">
+                <option value="any">Any</option>
+                <option value="4">⭐⭐⭐⭐ (4+)</option>
+                <option value="5">⭐⭐⭐⭐⭐ (5)</option>
+              </select>
+            </span>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <p style="color:var(--ink-400);font-size:14px;"><span id="resultCount">5</span> tutors found</p>
+      </div>
+
+      <div class="empty-state" id="emptyResults" style="display:none;">
+        <div class="icon">🔍</div>
+        <h3>No tutors found</h3>
+        <p>Try adjusting your filters or search for a different course code.</p>
+      </div>
+      <div class="tutor-grid" id="tutorResults"></div>
+    </div>
+
+    <!-- ════ MY BOOKINGS PAGE ════ -->
+    <div class="page-section" id="page-bookings">
+      <div class="section-header">
+        <div>
+          <h2>My Bookings</h2>
+          <p>Your upcoming and pending tutoring sessions.</p>
+        </div>
+      </div>
+
+      <div class="booking-grid" id="bookingGrid">
+        <div class="empty-state" style="grid-column:1/-1;"><div class="icon">📅</div><h3>No active bookings</h3><p>Book a tutor to get started.</p></div>
+      </div>
+    </div>
+
+    <!-- ════ SESSION HISTORY PAGE ════ -->
+    <div class="page-section" id="page-history">
+      <div class="section-header">
+        <div>
+          <h2>Session History</h2>
+          <p>All your past tutoring sessions.</p>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="createRipple(event)">📥 Export</button>
+      </div>
+
+      <div class="history-table-wrap">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Tutor</th>
+              <th>Course</th>
+              <th>Date</th>
+              <th>Duration</th>
+              <th>Amount</th>
+              <th>Rating</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody">
+            <tr><td colspan="7" class="empty-state"><div class="icon">📋</div><p>No session history yet.</p></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ════ PROFILE PAGE (placeholder) ════ -->
+    <div class="page-section" id="page-profile">
+      <div class="empty-state">
+        <div class="icon">👤</div>
+        <h3>My Profile</h3>
+        <p>Profile management coming soon — edit your bio, university info, and preferences.</p>
+      </div>
+    </div>
+
+    <!-- ════ SETTINGS PAGE (placeholder) ════ -->
+    <div class="page-section" id="page-settings">
+      <div class="empty-state">
+        <div class="icon">⚙️</div>
+        <h3>Settings</h3>
+        <p>Notification preferences, password change, and account settings coming soon.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ THEME SWITCHER ═══════════════ -->
+<div class="theme-switcher">
+  <div class="theme-panel" id="themePanel">
+    <div class="theme-panel-title">Color theme</div>
+    <div class="theme-opt" data-theme-choice="purple" onclick="setTheme('purple', this)">
+      <span class="swatch" style="background:linear-gradient(120deg,#667eea,#764ba2);"></span> Purple Wave
+    </div>
+    <div class="theme-opt" data-theme-choice="green" onclick="setTheme('green', this)">
+      <span class="swatch" style="background:linear-gradient(120deg,#059669,#047857);"></span> Campus Green
+    </div>
+    <div class="theme-opt active" data-theme-choice="blue" onclick="setTheme('blue', this)">
+      <span class="swatch" style="background:linear-gradient(120deg,#1e40af,#1d4ed8);"></span> Royal Naira
+    </div>
+  </div>
+  <button class="theme-fab" id="themeFab" aria-label="Switch color theme">🎨</button>
+</div>
+
+<script src="api.js"></script>
+<script>
+  /* ══════════════════════════════════════════════
+     AUTH GUARD — must be logged in as a student
+     ══════════════════════════════════════════════ */
+  if (!isAuthenticated()) { window.location.href = 'auth.html'; throw new Error('redirect'); }
+  const currentUser = getUser();
+  if (currentUser.role === 'tutor') { window.location.href = 'tutor-dashboard.html'; }
+
+  /* ══════════════════════════════════════════════
+     HELPERS
+     ══════════════════════════════════════════════ */
+  function getInitials(name) {
+    return (name || '?').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
+  }
+  function shortUniversity(u) { return u ? String(u).split(',')[0] : 'Student'; }
+  function fmtNaira(n) { return '₦' + Number(n || 0).toLocaleString('en-NG'); }
+  function fmtDateTime(iso) {
+    const d = new Date(iso);
+    if (isNaN(d)) return '—';
+    const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    let h = d.getHours(); const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()} · ${h}:${String(d.getMinutes()).padStart(2,'0')} ${ampm}`;
+  }
+  function fmtDate(iso) {
+    const d = new Date(iso); if (isNaN(d)) return '—';
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+  }
+  const STATUS_LABELS = {
+    pending: 'Pending', paid_escrow: 'In Escrow', completed: 'Completed',
+    funds_released: 'Released', cancelled: 'Cancelled', refunded: 'Refunded'
+  };
+  const STATUS_CLASS = {
+    pending: 'pending', paid_escrow: 'confirmed', completed: 'completed',
+    funds_released: 'completed', cancelled: 'cancelled', refunded: 'cancelled'
+  };
+  function statusBadge(status) {
+    return `<span class="status-badge ${STATUS_CLASS[status] || 'pending'}">${STATUS_LABELS[status] || status}</span>`;
+  }
+  function stars(rating) {
+    const r = Math.max(0, Math.min(5, Math.round(rating || 0)));
+    return '★'.repeat(r) + '☆'.repeat(5 - r);
+  }
+  function showToast(msg, type) {
+    let t = document.getElementById('toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'toast';
+      t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9000;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;color:#fff;opacity:0;transition:all .35s;box-shadow:0 8px 24px rgba(0,0,0,.2);';
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.style.background = type === 'error' ? 'var(--error,#ef4444)' : type === 'info' ? 'var(--primary-end,#1d4ed8)' : 'var(--success,#10b981)';
+    requestAnimationFrame(() => { t.style.opacity = '1'; });
+    setTimeout(() => { t.style.opacity = '0'; }, 3200);
+  }
+
+  /* ══════════════════════════════════════════════
+     PAGE SWITCHING
+     ══════════════════════════════════════════════ */
+  const pageNames = {
+    dashboard: 'Dashboard', search: 'Find Tutors', bookings: 'My Bookings',
+    history: 'Session History', profile: 'My Profile', settings: 'Settings'
+  };
+  function switchPage(name, linkEl) {
+    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+    if (linkEl) linkEl.classList.add('active');
+    else document.querySelector(`.sidebar-link[data-page="${name}"]`)?.classList.add('active');
+    document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+    document.getElementById(`page-${name}`).classList.add('active');
+    document.getElementById('pageTitle').textContent = pageNames[name] || name;
+    document.getElementById('sidebar').classList.remove('open');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ══════════════════════════════════════════════
+     MOBILE SIDEBAR
+     ══════════════════════════════════════════════ */
+  document.getElementById('menuToggle').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('open');
+  });
+  document.addEventListener('click', (e) => {
+    const sidebar = document.getElementById('sidebar');
+    if (window.innerWidth <= 991) {
+      if (!sidebar.contains(e.target) && !e.target.closest('#menuToggle')) sidebar.classList.remove('open');
+    }
+  });
+
+  /* ══════════════════════════════════════════════
+     STATE
+     ══════════════════════════════════════════════ */
+  let allBookings = [];
+  let tutorList = [];
+  const tutorMap = {}; // profile_id -> {user, tutor, courses}
+
+  function tutorName(profileId) {
+    const r = tutorMap[profileId];
+    return r ? r.user.full_name : `Tutor #${profileId}`;
+  }
+
+  /* ══════════════════════════════════════════════
+     POPULATE USER
+     ══════════════════════════════════════════════ */
+  function populateUser() {
+    const name = currentUser.full_name || 'Student';
+    document.getElementById('sidebarName').textContent = name;
+    document.getElementById('sidebarRole').textContent =
+      (currentUser.role === 'tutor' ? 'Tutor' : 'Student') +
+      (currentUser.university ? ' · ' + shortUniversity(currentUser.university) : '');
+    const ini = getInitials(name);
+    document.getElementById('sidebarAvatar').textContent = ini;
+    document.getElementById('headerAvatar').textContent = ini;
+    const h = new Date().getHours();
+    const part = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+    document.getElementById('greeting').textContent = `${part}, ${name.split(' ')[0]} 👋`;
+  }
+
+  /* ══════════════════════════════════════════════
+     LOAD DASHBOARD
+     ══════════════════════════════════════════════ */
+  async function loadDashboard() {
+    try {
+      const [bookings, tutors] = await Promise.all([getMyBookings(), searchTutors()]);
+      allBookings = bookings || [];
+      tutorList = tutors || [];
+      tutorList.forEach(r => { tutorMap[r.tutor.id] = r; });
+      renderStats();
+      renderNextSession();
+      renderRecommendations();
+      renderSearchResults(tutorList);
+      renderBookings();
+      renderHistory();
+    } catch (err) {
+      console.error('Dashboard load failed:', err);
+      showToast(err.message || 'Failed to load dashboard', 'error');
+    }
+  }
+
+  /* ══════════════════════════════════════════════
+     STATS
+     ══════════════════════════════════════════════ */
+  function renderStats() {
+    const now = new Date();
+    const upcoming = allBookings.filter(b =>
+      (b.status === 'pending' || b.status === 'paid_escrow') && new Date(b.session_datetime) > now);
+    const completed = allBookings.filter(b => b.status === 'completed' || b.status === 'funds_released');
+    const spent = allBookings.reduce((sum, b) =>
+      sum + ((b.status === 'paid_escrow' || b.status === 'completed' || b.status === 'funds_released') ? Number(b.total_price || 0) : 0), 0);
+    document.getElementById('statUpcoming').textContent = upcoming.length;
+    document.getElementById('statCompleted').textContent = completed.length;
+    const rated = tutorList.filter(t => t.tutor.total_reviews > 0);
+    document.getElementById('statRating').textContent =
+      rated.length ? (rated.reduce((s, t) => s + t.tutor.average_rating, 0) / rated.length).toFixed(1) : '0.0';
+    document.getElementById('statSpent').textContent = fmtNaira(spent);
+    const badge = document.getElementById('bookingBadge');
+    if (upcoming.length > 0) { badge.textContent = upcoming.length; badge.style.display = ''; }
+    else { badge.style.display = 'none'; }
+    document.getElementById('greetingSub').textContent = upcoming.length
+      ? `You have ${upcoming.length} upcoming session${upcoming.length > 1 ? 's' : ''}.`
+      : 'No upcoming sessions — find a tutor to book.';
+  }
+
+  /* ══════════════════════════════════════════════
+     NEXT SESSION
+     ══════════════════════════════════════════════ */
+  function renderNextSession() {
+    const container = document.getElementById('nextSessionCard');
+    const upcoming = allBookings
+      .filter(b => (b.status === 'pending' || b.status === 'paid_escrow') && new Date(b.session_datetime) > new Date())
+      .sort((a, b) => new Date(a.session_datetime) - new Date(b.session_datetime));
+    if (!upcoming.length) {
+      container.innerHTML = '<div class="empty-state" style="padding:20px;"><div class="icon">📅</div><p>No upcoming sessions yet — book a tutor to get started.</p></div>';
+      return;
+    }
+    const b = upcoming[0];
+    const paid = b.status !== 'pending';
+    container.innerHTML = `
+      <div class="booking-header">
+        <div>
+          <h4>${paid ? '' : 'Pending: '}Session with ${tutorName(b.tutor_profile_id)}</h4>
+          <span style="font-size:13px;color:var(--ink-400);">${b.duration_hours}h · ${fmtDateTime(b.session_datetime)}</span>
+        </div>
+        ${statusBadge(b.status)}
+      </div>
+      <div class="booking-detail">📅 ${fmtDateTime(b.session_datetime)}</div>
+      <div class="booking-detail">📍 Google Meet</div>
+      <div class="booking-detail">💰 ${fmtNaira(b.total_price)} · ${paid ? 'Paid via Paystack' : 'Awaiting payment'}</div>
+      <div class="booking-actions">
+        ${paid
+          ? '<button class="btn btn-primary btn-sm">Join Session</button>'
+          : `<button class="btn btn-primary btn-sm" onclick="payBooking(${b.id})">Pay Now</button>`}
+        ${(b.status === 'pending' || b.status === 'paid_escrow')
+          ? `<button class="btn btn-outline btn-sm" onclick="cancelBookingFlow(${b.id})">Cancel</button>` : ''}
+      </div>`;
+  }
+
+  /* ══════════════════════════════════════════════
+     RECOMMENDATIONS
+     ══════════════════════════════════════════════ */
+  function renderRecommendations() {
+    const scroll = document.getElementById('recommendScroll');
+    const top = tutorList.slice().sort((a, b) => b.tutor.average_rating - a.tutor.average_rating).slice(0, 5);
+    if (!top.length) {
+      scroll.innerHTML = '<div class="empty-state" style="padding:16px;"><div class="icon">👨‍🏫</div><p>No tutors available yet.</p></div>';
+      return;
+    }
+    scroll.innerHTML = top.map(r => `
+      <div class="recommend-card">
+        <div class="avatar-lg">${getInitials(r.user.full_name)}</div>
+        <h4>${r.user.full_name}</h4>
+        <div class="uni">${shortUniversity(r.user.university)}</div>
+        <div class="rating">${stars(r.tutor.average_rating)} <span style="color:var(--ink-400);font-size:12px;">(${r.tutor.total_reviews})</span></div>
+        <div class="subjects">${(r.courses || []).slice(0, 3).join(', ')}</div>
+        <button class="btn btn-primary btn-sm" onclick="location.href='booking.html?tutor=${r.tutor.id}'">Book Now</button>
+      </div>`).join('');
+  }
+
+  /* ══════════════════════════════════════════════
+     TUTOR SEARCH (real API)
+     ══════════════════════════════════════════════ */
+  document.getElementById('searchInput').addEventListener('input', debounce(applyFilters, 350));
+
+  function debounce(fn, ms) {
+    let t;
+    return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+  }
+
+  function toggleFilter(el) {
+    if (el.dataset.filter === 'level') {
+      document.querySelectorAll('.filter-chip[data-filter="level"]').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+    } else {
+      el.classList.toggle('active');
+    }
+    applyFilters();
+  }
+
+  async function applyFilters() {
+    const query = document.getElementById('searchInput').value.trim();
+    const priceSelect = document.querySelector('.filter-chip[data-filter="price"] select');
+    const ratingSelect = document.querySelector('.filter-chip[data-filter="rating"] select');
+    const priceFilter = priceSelect ? priceSelect.value : 'any';
+    const ratingFilter = ratingSelect ? ratingSelect.value : 'any';
+
+    const params = {};
+    if (query) params.course_code = query.toUpperCase().replace(/\s+/g, '');
+    if (priceFilter === 'low') { params.min_price = 1000; params.max_price = 2500; }
+    if (priceFilter === 'mid') { params.min_price = 2500; params.max_price = 4000; }
+    if (priceFilter === 'high') { params.min_price = 4000; }
+    if (ratingFilter === '4') params.min_rating = 4;
+    if (ratingFilter === '5') params.min_rating = 5;
+
+    try {
+      const results = await searchTutors(params);
+      renderSearchResults(results);
+    } catch (err) {
+      console.error('Search failed:', err);
+      renderSearchResults([]);
+    }
+  }
+
+  function renderSearchResults(results) {
+    const grid = document.getElementById('tutorResults');
+    const empty = document.getElementById('emptyResults');
+    document.getElementById('resultCount').textContent = results.length;
+    if (!results.length) {
+      if (empty) empty.style.display = 'block';
+      if (grid) grid.style.display = 'none';
+      return;
+    }
+    if (empty) empty.style.display = 'none';
+    if (grid) grid.style.display = 'grid';
+    grid.innerHTML = results.map(r => {
+      const verified = r.tutor.grade_verified ? '<span class="tutor-tag grade">Verified A</span>' : '';
+      const courseTags = (r.courses || []).map(c => `<span class="tutor-tag">${c}</span>`).join('');
+      return `
+        <div class="tutor-card">
+          <div class="tutor-card-top">
+            <div class="tutor-avatar">${getInitials(r.user.full_name)}</div>
+            <div class="tutor-info">
+              <h4>${r.user.full_name}</h4>
+              <div class="uni">${shortUniversity(r.user.university)}</div>
+              <div class="tutor-meta">
+                <span>⭐ ${Number(r.tutor.average_rating).toFixed(1)} (${r.tutor.total_reviews} reviews)</span>
+                ${r.tutor.grade_verified ? '<span>🎓 Verified A</span>' : ''}
+              </div>
+            </div>
+          </div>
+          <div class="tutor-tags">${courseTags}${verified}</div>
+          <div class="tutor-card-bottom">
+            <div class="tutor-price">${fmtNaira(r.tutor.hourly_rate)} <span>/ session</span></div>
+            <button class="btn btn-primary btn-sm" onclick="location.href='booking.html?tutor=${r.tutor.id}'">Book Now</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  /* ══════════════════════════════════════════════
+     BOOKINGS GRID
+     ══════════════════════════════════════════════ */
+  function renderBookings() {
+    const grid = document.getElementById('bookingGrid');
+    const upcoming = allBookings
+      .filter(b => (b.status === 'pending' || b.status === 'paid_escrow') && new Date(b.session_datetime) > new Date())
+      .sort((a, b) => new Date(a.session_datetime) - new Date(b.session_datetime));
+    if (!upcoming.length) {
+      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="icon">📅</div><h3>No active bookings</h3><p>Book a tutor to get started.</p></div>';
+      return;
+    }
+    grid.innerHTML = upcoming.map(b => {
+      const paid = b.status !== 'pending';
+      return `
+        <div class="booking-card">
+          <div class="booking-header">
+            <div>
+              <h4>Session with ${tutorName(b.tutor_profile_id)}</h4>
+              <span style="font-size:13px;color:var(--ink-400);">${b.duration_hours}h</span>
+            </div>
+            ${statusBadge(b.status)}
+          </div>
+          <div class="booking-detail">📅 ${fmtDateTime(b.session_datetime)}</div>
+          <div class="booking-detail">📍 Google Meet</div>
+          <div class="booking-detail">💰 ${fmtNaira(b.total_price)} · ${paid ? 'Paid via Paystack' : 'Awaiting payment'}</div>
+          <div class="booking-actions">
+            ${paid
+              ? '<button class="btn btn-primary btn-sm">Join Session</button>'
+              : `<button class="btn btn-primary btn-sm" onclick="payBooking(${b.id})">Pay Now</button>`}
+            <button class="btn btn-outline btn-sm" onclick="cancelBookingFlow(${b.id})">Cancel</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  /* ══════════════════════════════════════════════
+     BOOKING ACTIONS
+     ══════════════════════════════════════════════ */
+  async function payBooking(bookingId) {
+    try {
+      const res = await initializePayment(bookingId);
+      if (res && res.authorization_url) {
+        window.location.href = res.authorization_url;
+      } else {
+        showToast('Payment could not be initialized.', 'error');
+      }
+    } catch (err) {
+      showToast('Payment error: ' + (err.message || 'could not initialize'), 'error');
+    }
+  }
+
+  async function cancelBookingFlow(bookingId) {
+    if (!confirm('Cancel this booking? A 20% deposit may be forfeited if within 24h of the session.')) return;
+    try {
+      await cancelBooking(bookingId);
+      showToast('Booking cancelled', 'success');
+      await loadDashboard();
+    } catch (err) {
+      showToast(err.message || 'Could not cancel booking', 'error');
+    }
+  }
+
+  /* ══════════════════════════════════════════════
+     SESSION HISTORY
+     ══════════════════════════════════════════════ */
+  function renderHistory() {
+    const tbody = document.getElementById('historyBody');
+    const past = allBookings
+      .filter(b => b.status === 'completed' || b.status === 'funds_released' || b.status === 'cancelled' || b.status === 'refunded')
+      .sort((a, b) => new Date(b.session_datetime) - new Date(a.session_datetime));
+    if (!past.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><div class="icon">📋</div><p>No session history yet.</p></td></tr>';
+      return;
+    }
+    tbody.innerHTML = past.map(b => `
+      <tr>
+        <td><div class="td-tutor"><div class="mini-avatar">${getInitials(tutorName(b.tutor_profile_id))}</div> ${tutorName(b.tutor_profile_id)}</div></td>
+        <td>${(tutorMap[b.tutor_profile_id] && (tutorMap[b.tutor_profile_id].courses || [])[0]) || '—'}</td>
+        <td>${fmtDate(b.session_datetime)}</td>
+        <td>${b.duration_hours} hr${b.duration_hours > 1 ? 's' : ''}</td>
+        <td>${fmtNaira(b.total_price)}</td>
+        <td><span class="stars">${b.status === 'completed' || b.status === 'funds_released' ? stars(5) : '—'}</span></td>
+        <td>${statusBadge(b.status)}</td>
+      </tr>`).join('');
+  }
+
+  /* ══════════════════════════════════════════════
+     RIPPLE EFFECT
+     ══════════════════════════════════════════════ */
+  function createRipple(e) {
+    const btn = e.currentTarget;
+    const circle = document.createElement('span');
+    const diameter = Math.max(btn.clientWidth, btn.clientHeight);
+    const rect = btn.getBoundingClientRect();
+    circle.style.width = circle.style.height = diameter + 'px';
+    circle.style.left = (e.clientX - rect.left - diameter / 2) + 'px';
+    circle.style.top = (e.clientY - rect.top - diameter / 2) + 'px';
+    circle.classList.add('ripple');
+    btn.appendChild(circle);
+    setTimeout(() => circle.remove(), 600);
+  }
+  document.querySelectorAll('.btn').forEach(btn => btn.addEventListener('click', createRipple));
+
+  /* ══════════════════════════════════════════════
+     THEME SWITCHER
+     ══════════════════════════════════════════════ */
+  const themeFab = document.getElementById('themeFab');
+  const themePanel = document.getElementById('themePanel');
+  themeFab.addEventListener('click', () => {
+    themeFab.classList.toggle('open');
+    themePanel.classList.toggle('open');
+  });
+  function setTheme(name, el) {
+    document.body.setAttribute('data-theme', name);
+    document.querySelectorAll('.theme-opt').forEach(o => o.classList.remove('active'));
+    el.classList.add('active');
+  }
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.theme-switcher')) {
+      themePanel.classList.remove('open');
+      themeFab.classList.remove('open');
+    }
+  });
+
+  /* ══════════════════════════════════════════════
+     INIT
+     ══════════════════════════════════════════════ */
+  populateUser();
+  loadDashboard();
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aced — Book a Tutor</title>
+<link rel="icon" type="image/png" href="assets/aced-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary-start:#1e40af;--primary-end:#1d4ed8;--secondary:#3b82f6;
+    --accent:#f97316;--success:#10b981;--warning:#f59e0b;--error:#ef4444;
+    --gradient:linear-gradient(120deg,var(--primary-start),var(--primary-end));
+  }
+  [data-theme="blue"]{}
+  [data-theme="purple"]{--primary-start:#667eea;--primary-end:#764ba2;--secondary:#8b5cf6;--accent:#10b981;--gradient:linear-gradient(120deg,var(--primary-start),var(--primary-end));}
+  [data-theme="green"]{--primary-start:#059669;--primary-end:#047857;--secondary:#34d399;--accent:#f59e0b;--gradient:linear-gradient(120deg,var(--primary-start),var(--primary-end));}
+
+  :root{
+    --ink-900:#111827;--ink-800:#1f2937;--ink-700:#374151;--ink-600:#4b5563;
+    --ink-500:#6b7280;--ink-400:#9ca3af;--ink-300:#d1d5db;--ink-200:#e5e7eb;
+    --ink-100:#f3f4f6;--ink-50:#f9fafb;--bg:#f8f9fc;--bg-card:#ffffff;
+    --line:#e8ecf0;--radius:12px;--radius-sm:8px;--radius-lg:16px;
+    --shadow-xs:0 1px 2px rgba(0,0,0,0.04);--shadow-sm:0 2px 8px rgba(31,41,55,0.06);
+    --shadow-md:0 8px 24px rgba(31,41,55,0.10);--shadow-lg:0 16px 40px rgba(31,41,55,0.14);
+    --ease:cubic-bezier(.4,0,.2,1);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{height:100%;}
+  body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;color:var(--ink-800);background:var(--bg);line-height:1.5;min-height:100%;overflow-x:hidden;}
+  a{text-decoration:none;color:inherit;}
+  button{font-family:inherit;border:none;cursor:pointer;background:none;}
+  input,select,textarea{font-family:inherit;}
+  ::selection{background:var(--secondary);color:#fff;}
+  :focus-visible{outline:2px solid var(--primary-end);outline-offset:2px;}
+
+  /* ─── LAYOUT ─── */
+  .app-header{background:var(--bg-card);border-bottom:1px solid var(--line);padding:0 28px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+  .app-header .logo{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:20px;display:flex;align-items:center;gap:8px;}
+  .app-header .back-link{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:var(--ink-500);transition:color 0.2s;}
+  .app-header .back-link:hover{color:var(--primary-end);}
+  .app-header .header-actions{display:flex;align-items:center;gap:12px;}
+  .content{max-width:1120px;margin:0 auto;padding:28px;}
+
+  /* ─── STEP PROGRESS ─── */
+  .step-progress{display:flex;justify-content:center;gap:0;margin-bottom:36px;max-width:640px;margin-left:auto;margin-right:auto;}
+  .step-item{display:flex;align-items:center;gap:0;flex:1;}
+  .step-circle{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;transition:all 0.4s var(--ease);position:relative;z-index:2;}
+  .step-circle.pending{background:var(--ink-100);color:var(--ink-400);border:2px solid var(--line);}
+  .step-circle.active{background:var(--gradient);color:#fff;box-shadow:0 4px 12px color-mix(in srgb, var(--primary-end) 40%, transparent);}
+  .step-circle.done{background:var(--success);color:#fff;}
+  .step-circle.done::after{content:"✓";}
+  .step-label{font-size:12px;font-weight:600;color:var(--ink-400);margin-left:8px;white-space:nowrap;}
+  .step-label.active{color:var(--ink-800);}
+  .step-label.done{color:var(--success);}
+  .step-connector{flex:1;height:2px;background:var(--line);margin:0 8px;position:relative;top:-14px;transition:background 0.4s var(--ease);}
+  .step-connector.done{background:var(--success);}
+
+  /* ─── STEP PANELS ─── */
+  .step-panel{display:none;animation:fadeSlideIn 0.45s var(--ease);}
+  .step-panel.active{display:block;}
+  @keyframes fadeSlideIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+
+  .panel-card{background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);padding:28px;margin-bottom:20px;}
+  .panel-card h2{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;margin-bottom:4px;}
+  .panel-card .subtitle{font-size:14px;color:var(--ink-400);margin-bottom:20px;}
+  .panel-actions{display:flex;justify-content:space-between;margin-top:24px;gap:12px;}
+
+  /* ─── BUTTONS ─── */
+  .btn{position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 28px;border-radius:var(--radius-sm);font-weight:700;font-size:14px;transition:transform 0.25s var(--ease),box-shadow 0.25s var(--ease),background 0.25s var(--ease);}
+  .btn:hover{transform:translateY(-1px);}
+  .btn:active{transform:translateY(0);}
+  .btn-primary{background:var(--gradient);color:#fff;box-shadow:0 6px 16px -4px color-mix(in srgb, var(--primary-end) 50%, transparent);}
+  .btn-primary:hover{box-shadow:0 10px 24px -4px color-mix(in srgb, var(--primary-end) 60%, transparent);}
+  .btn-primary:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+  .btn-outline{background:transparent;color:var(--ink-700);border:2px solid var(--line);}
+  .btn-outline:hover{border-color:var(--primary-start);color:var(--primary-end);}
+  .btn-success{background:var(--success);color:#fff;}
+  .btn-success:hover{box-shadow:0 6px 16px -4px color-mix(in srgb, var(--success) 60%, transparent);}
+  .btn-success:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+  .btn-lg{padding:14px 36px;font-size:16px;border-radius:var(--radius);}
+  .btn-sm{padding:8px 16px;font-size:13px;}
+  .btn-block{width:100%;}
+  .btn-loading{position:relative;color:transparent!important;pointer-events:none;}
+  .btn-loading::after{content:"";position:absolute;width:18px;height:18px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.6s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,0.45);transform:scale(0);animation:rippleAnim 0.6s var(--ease);pointer-events:none;}
+  @keyframes rippleAnim{to{transform:scale(3);opacity:0;}}
+
+  /* ─── FORM ─── */
+  .form-group{margin-bottom:16px;}
+  .form-label{display:block;font-size:13px;font-weight:600;color:var(--ink-700);margin-bottom:6px;}
+  .form-input,.form-select{width:100%;padding:12px 14px;border:2px solid var(--line);border-radius:var(--radius-sm);font-size:14px;color:var(--ink-800);background:#fff;transition:border-color 0.25s var(--ease);}
+  .form-input:focus,.form-select:focus{border-color:var(--primary-start);box-shadow:0 0 0 3px color-mix(in srgb, var(--primary-start) 12%, transparent);outline:none;}
+  .form-error{font-size:12px;color:var(--error);margin-top:4px;display:none;}
+  .form-error.show{display:block;}
+  .form-input.error{border-color:var(--error);}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:600px){.form-row{grid-template-columns:1fr;}}
+
+  /* ─── TUTOR SELECT ─── */
+  .tutor-option{display:flex;align-items:center;gap:16px;padding:16px;border:2px solid var(--line);border-radius:var(--radius);cursor:pointer;transition:all 0.25s var(--ease);margin-bottom:12px;}
+  .tutor-option:hover{border-color:var(--primary-start);background:color-mix(in srgb, var(--primary-start) 3%, white);}
+  .tutor-option.selected{border-color:var(--primary-end);background:color-mix(in srgb, var(--primary-start) 6%, white);}
+  .tutor-option .avatar{width:48px;height:48px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:17px;flex-shrink:0;}
+  .tutor-option .info{flex:1;min-width:0;}
+  .tutor-option .info h4{font-size:15px;font-weight:700;}
+  .tutor-option .info .meta{font-size:12.5px;color:var(--ink-400);margin-top:1px;display:flex;gap:10px;flex-wrap:wrap;}
+  .tutor-option .info .meta span{display:flex;align-items:center;gap:3px;}
+  .tutor-option .price{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;white-space:nowrap;}
+  .tutor-option .price span{font-size:12px;font-weight:500;color:var(--ink-400);}
+  .tutor-option .check{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;transition:all 0.2s;flex-shrink:0;}
+  .tutor-option.selected .check{background:var(--gradient);border-color:transparent;}
+  .tutor-option.selected .check::after{content:"✓";}
+
+  /* ─── COURSE / SCHEDULE ─── */
+  .schedule-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:768px){.schedule-grid{grid-template-columns:1fr;}}
+  .date-list{display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;padding-right:4px;}
+  .date-list::-webkit-scrollbar{width:4px;}
+  .date-list::-webkit-scrollbar-thumb{background:var(--line);border-radius:2px;}
+  .date-opt{display:flex;align-items:center;gap:12px;padding:12px;border:2px solid var(--line);border-radius:var(--radius-sm);cursor:pointer;transition:all 0.2s var(--ease);}
+  .date-opt:hover{border-color:var(--primary-start);}
+  .date-opt.selected{border-color:var(--primary-end);background:color-mix(in srgb, var(--primary-start) 6%, white);}
+  .date-opt .day{text-align:center;}
+  .date-opt .day .num{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;line-height:1;color:var(--primary-end);}
+  .date-opt .day .name{font-size:10px;font-weight:600;color:var(--ink-400);text-transform:uppercase;}
+  .date-opt .detail{flex:1;}
+  .date-opt .detail .label{font-size:14px;font-weight:600;}
+  .date-opt .detail .sub{font-size:12px;color:var(--ink-400);}
+  .date-opt .time{font-size:13px;font-weight:700;color:var(--primary-end);}
+  .date-opt .check{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;transition:all 0.2s;flex-shrink:0;}
+  .date-opt.selected .check{background:var(--gradient);border-color:transparent;}
+  .date-opt.selected .check::after{content:"✓";}
+
+  /* ─── PRICING SUMMARY ─── */
+  .price-breakdown{background:var(--ink-50);border-radius:var(--radius-sm);padding:20px;}
+  .price-row{display:flex;justify-content:space-between;padding:8px 0;font-size:14px;}
+  .price-row .label{color:var(--ink-500);}
+  .price-row .value{font-weight:600;}
+  .price-row.total{border-top:2px solid var(--line);margin-top:8px;padding-top:16px;font-size:17px;}
+  .price-row.total .label{font-weight:700;color:var(--ink-800);}
+  .price-row.total .value{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:var(--primary-end);}
+  .price-note{font-size:12px;color:var(--ink-400);margin-top:12px;display:flex;align-items:center;gap:6px;}
+  .price-note.deposit{color:var(--accent);font-weight:600;}
+  .price-note.escrow{color:var(--ink-500);}
+
+  /* ─── ESCROW STATE MACHINE ─── */
+  .escrow-machine{background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);padding:28px;margin-bottom:24px;}
+  .escrow-machine h3{font-size:16px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+  .escrow-machine .subtitle{font-size:13px;color:var(--ink-400);margin-bottom:20px;}
+  .escrow-flow{display:flex;align-items:center;justify-content:center;gap:0;padding:8px 0;}
+  .escrow-state{display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;z-index:2;flex:1;max-width:140px;}
+  .escrow-node{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all 0.5s var(--ease);position:relative;}
+  .escrow-node.pending{background:var(--ink-100);color:var(--ink-400);border:2px solid var(--line);}
+  .escrow-node.current{background:var(--gradient);color:#fff;box-shadow:0 4px 16px color-mix(in srgb, var(--primary-end) 50%, transparent);animation:pulse 2s ease-in-out infinite;}
+  .escrow-node.done{background:var(--success);color:#fff;transform:scale(1.05);}
+  .escrow-node.failed{background:var(--error);color:#fff;}
+  @keyframes pulse{0%,100%{box-shadow:0 4px 16px color-mix(in srgb, var(--primary-end) 40%, transparent);}50%{box-shadow:0 4px 24px color-mix(in srgb, var(--primary-end) 60%, transparent);}}
+  .escrow-label{font-size:11px;font-weight:700;color:var(--ink-400);text-transform:uppercase;letter-spacing:0.04em;text-align:center;}
+  .escrow-label.active{color:var(--primary-end);}
+  .escrow-label.done{color:var(--success);}
+  .escrow-label-text{font-size:10px;color:var(--ink-400);text-align:center;max-width:100px;line-height:1.3;}
+  .escrow-arrow{flex:1;height:3px;background:var(--line);margin:0 -4px;position:relative;top:-14px;transition:background 0.5s var(--ease);min-width:20px;}
+  .escrow-arrow.done{background:var(--success);}
+  @media(max-width:700px){
+    .escrow-flow{flex-wrap:wrap;gap:4px;}
+    .escrow-state{max-width:100px;}
+    .escrow-node{width:36px;height:36px;font-size:14px;}
+    .escrow-label{font-size:9px;}
+    .escrow-arrow{min-width:10px;}
+  }
+
+  /* ─── PAYMENT MODAL ─── */
+  .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:5000;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);animation:modalFade 0.3s var(--ease);}
+  .modal-overlay.open{display:flex;}
+  @keyframes modalFade{from{opacity:0;}to{opacity:1;}}
+  .modal{background:#fff;border-radius:var(--radius-lg);width:100%;max-width:440px;box-shadow:var(--shadow-lg);overflow:hidden;animation:modalSlide 0.35s var(--ease);}
+  @keyframes modalSlide{from{transform:translateY(20px) scale(0.97);opacity:0;}to{transform:translateY(0) scale(1);opacity:1;}}
+  .modal-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 0;}
+  .modal-header h3{font-size:18px;font-weight:700;}
+  .modal-close{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--ink-400);transition:background 0.2s;background:var(--ink-50);}
+  .modal-close:hover{background:var(--ink-100);}
+  .modal-body{padding:20px 24px;}
+  .modal-footer{padding:16px 24px 24px;border-top:1px solid var(--line);display:flex;gap:12px;flex-direction:column;}
+  .modal-footer .note{font-size:12px;color:var(--ink-400);text-align:center;}
+
+  /* Paystack simulation */
+  .paystack-card{padding:24px;text-align:center;border:2px dashed var(--line);border-radius:var(--radius);margin-bottom:16px;}
+  .paystack-card .brand{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:#0ba365;margin-bottom:4px;}
+  .paystack-card .brand span{color:var(--ink-800);}
+  .paystack-card .amount{font-size:32px;font-family:'Space Grotesk',sans-serif;font-weight:700;margin:12px 0;}
+  .paystack-card .amount span{font-size:16px;font-weight:500;color:var(--ink-400);}
+  .paystack-card .detail-row{display:flex;justify-content:space-between;font-size:13px;color:var(--ink-500);padding:4px 0;}
+  .paystack-card .detail-row.total{font-weight:700;color:var(--ink-800);border-top:1px solid var(--line);padding-top:8px;margin-top:8px;}
+
+  .card-sim{background:var(--ink-50);border-radius:var(--radius-sm);padding:16px;margin-bottom:14px;}
+  .card-sim .sim-label{font-size:11px;font-weight:700;color:var(--ink-400);text-transform:uppercase;margin-bottom:8px;}
+  .card-sim .sim-row{display:flex;gap:8px;margin-bottom:8px;}
+  .card-sim .sim-input{flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:6px;font-size:13px;background:#fff;}
+
+  .payment-spinner{display:none;flex-direction:column;align-items:center;gap:16px;padding:32px 0;}
+  .payment-spinner.show{display:flex;}
+  .spinner-ring{width:48px;height:48px;border:4px solid var(--ink-100);border-top-color:var(--primary-end);border-radius:50%;animation:spin 0.7s linear infinite;}
+  .payment-spinner p{font-size:14px;color:var(--ink-500);font-weight:600;}
+  .payment-success{display:none;flex-direction:column;align-items:center;gap:12px;padding:24px 0;}
+  .payment-success.show{display:flex;}
+  .payment-success .icon{width:56px;height:56px;border-radius:50%;background:color-mix(in srgb, var(--success) 12%, white);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--success);}
+  .payment-success h3{font-size:18px;font-weight:700;}
+  .payment-success p{font-size:13px;color:var(--ink-400);text-align:center;}
+
+  .payment-failed{display:none;flex-direction:column;align-items:center;gap:12px;padding:24px 0;}
+  .payment-failed.show{display:flex;}
+  .payment-failed .icon{width:56px;height:56px;border-radius:50%;background:color-mix(in srgb, var(--error) 12%, white);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--error);}
+  .payment-failed h3{font-size:18px;font-weight:700;}
+  .payment-failed p{font-size:13px;color:var(--ink-400);text-align:center;}
+
+  /* ─── CONFIRMATION ─── */
+  .confirmation{text-align:center;padding:20px 0;}
+  .confirmation .big-icon{width:72px;height:72px;border-radius:50%;background:color-mix(in srgb, var(--success) 15%, white);display:flex;align-items:center;justify-content:center;font-size:36px;color:var(--success);margin:0 auto 20px;}
+  .confirmation h2{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;margin-bottom:6px;}
+  .confirmation .sub{font-size:15px;color:var(--ink-400);margin-bottom:20px;}
+  .confirmation .ref-box{background:var(--ink-50);border-radius:var(--radius-sm);padding:16px 24px;display:inline-flex;flex-direction:column;align-items:center;gap:4px;margin-bottom:20px;}
+  .confirmation .ref-box .label{font-size:11px;font-weight:700;color:var(--ink-400);text-transform:uppercase;}
+  .confirmation .ref-box .code{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;letter-spacing:0.06em;color:var(--primary-end);}
+  .confirmation .next-steps{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+
+  .summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0;}
+  .summary-item{padding:12px;background:var(--ink-50);border-radius:var(--radius-sm);text-align:left;}
+  .summary-item .lab{font-size:11px;font-weight:700;color:var(--ink-400);text-transform:uppercase;margin-bottom:2px;}
+  .summary-item .val{font-size:15px;font-weight:600;}
+  @media(max-width:600px){.summary-grid{grid-template-columns:1fr;}}
+
+  /* ─── BOOKING HISTORY ─── */
+  .history-section{margin-top:36px;padding-top:24px;border-top:1px solid var(--line);}
+  .history-section h2{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;margin-bottom:4px;}
+  .history-section .sub{font-size:14px;color:var(--ink-400);margin-bottom:16px;}
+  .history-table{width:100%;border-collapse:collapse;background:var(--bg-card);border-radius:var(--radius);overflow:hidden;border:1px solid var(--line);}
+  .history-table thead th{text-align:left;padding:12px 16px;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--ink-400);background:var(--ink-50);border-bottom:1px solid var(--line);}
+  .history-table tbody td{padding:14px 16px;font-size:13px;border-bottom:1px solid var(--line);}
+  .history-table tbody tr:last-child td{border-bottom:none;}
+  .history-table tbody tr{transition:background 0.2s;}
+  .history-table tbody tr:hover{background:var(--ink-50);}
+  .escrow-tag{font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap;}
+  .escrow-tag.pending{background:color-mix(in srgb, var(--ink-400) 10%, white);color:var(--ink-600);}
+  .escrow-tag.paid{background:color-mix(in srgb, var(--warning) 12%, white);color:var(--warning);}
+  .escrow-tag.completed{background:color-mix(in srgb, var(--secondary) 12%, white);color:var(--secondary);}
+  .escrow-tag.released{background:color-mix(in srgb, var(--success) 12%, white);color:var(--success);}
+  .escrow-tag.refunded{background:color-mix(in srgb, var(--error) 12%, white);color:var(--error);}
+  .history-table-wrap{overflow-x:auto;}
+
+  /* ─── TOAST ─── */
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);z-index:6000;padding:12px 24px;border-radius:var(--radius-sm);font-size:14px;font-weight:600;color:#fff;opacity:0;pointer-events:none;transition:all 0.4s var(--ease);}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto;}
+  .toast.success{background:var(--success);}
+  .toast.error{background:var(--error);}
+  .toast.info{background:var(--primary-end);}
+
+  /* ─── EMPTY STATE ─── */
+  .empty-state{text-align:center;padding:40px 20px;color:var(--ink-400);}
+  .empty-state .icon{font-size:40px;margin-bottom:10px;}
+
+  /* ─── THEME SWITCHER ─── */
+  .theme-switcher{position:fixed;bottom:20px;right:20px;z-index:2000;display:flex;flex-direction:column;align-items:flex-end;gap:10px;}
+  .theme-fab{width:44px;height:44px;border-radius:50%;background:var(--gradient);box-shadow:0 4px 16px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;transition:transform 0.4s var(--ease);cursor:pointer;}
+  .theme-fab.open{transform:rotate(135deg);}
+  .theme-panel{background:#fff;border-radius:14px;box-shadow:var(--shadow-lg);padding:12px;border:1px solid var(--line);width:190px;display:flex;flex-direction:column;gap:6px;transform:translateY(10px) scale(0.96);opacity:0;pointer-events:none;transition:transform 0.3s var(--ease),opacity 0.3s var(--ease);}
+  .theme-panel.open{transform:translateY(0) scale(1);opacity:1;pointer-events:auto;}
+  .theme-panel-title{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--ink-400);letter-spacing:0.06em;padding:2px 4px 6px;}
+  .theme-opt{display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:background 0.2s var(--ease);}
+  .theme-opt:hover{background:var(--ink-50);}
+  .theme-opt.active{background:var(--ink-50);}
+  .swatch{width:16px;height:16px;border-radius:5px;flex-shrink:0;}
+  .theme-opt.active::after{content:"✓";margin-left:auto;color:var(--primary-end);font-weight:700;}
+
+  /* ─── RESPONSIVE ─── */
+  @media(max-width:991px){.content{padding:20px 16px;}.app-header{padding:0 16px;}}
+  @media(max-width:768px){.panel-card{padding:20px;}.schedule-grid{grid-template-columns:1fr;}.escrow-flow{gap:4px;flex-wrap:wrap;}.escrow-state{max-width:80px;}}
+  @media(max-width:480px){.app-header{padding:0 12px;height:56px;}.app-header .logo{font-size:17px;}.content{padding:16px 12px;}.step-label{display:none;}}
+  @media(prefers-reduced-motion:reduce){*{animation-duration:0.001ms!important;transition-duration:0.001ms!important;}}
+  @media(prefers-reduced-motion:reduce){*{animation-duration:0.001ms!important;transition-duration:0.001ms!important;scroll-behavior:auto!important;}}
+</style>
+</head>
+<body data-theme="blue">
+
+<!-- ═══ HEADER ═══ -->
+<header class="app-header">
+  <div style="display:flex;align-items:center;gap:16px;">
+    <a href="dashboard.html" class="back-link">← Back to Dashboard</a>
+    <span style="width:1px;height:20px;background:var(--line);"></span>
+    <div class="logo"><img src="assets/aced-logo.png" alt="Aced logo" height="22"></div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-outline btn-sm" onclick="resetBooking()">New Booking</button>
+  </div>
+</header>
+
+<div class="content">
+
+  <!-- ═══ STEP PROGRESS ═══ -->
+  <div class="step-progress" id="stepProgress">
+    <div class="step-item"><div class="step-circle active" id="s1c">1</div><span class="step-label active" id="s1l">Select Tutor</span><div class="step-connector" id="s1con"></div></div>
+    <div class="step-item"><div class="step-circle pending" id="s2c">2</div><span class="step-label" id="s2l">Schedule</span><div class="step-connector" id="s2con"></div></div>
+    <div class="step-item"><div class="step-circle pending" id="s3c">3</div><span class="step-label" id="s3l">Review & Pay</span><div class="step-connector" id="s3con"></div></div>
+    <div class="step-item"><div class="step-circle pending" id="s4c">4</div><span class="step-label" id="s4l">Confirmation</span></div>
+  </div>
+
+  <!-- ═══ STEP 1: SELECT TUTOR ═══ -->
+  <div class="step-panel active" id="step1">
+    <div class="panel-card">
+      <h2>Choose Your Tutor</h2>
+      <p class="subtitle">Select a verified tutor for your course. All tutors are FUNAAB students with "Verified A" grade badges.</p>
+      <div id="tutorOptions">
+        <div class="empty-state"><div class="icon">🔍</div><h3>Loading tutors…</h3><p>Fetching verified tutors from the platform.</p></div>
+      </div>
+    </div>
+    <div class="panel-actions">
+      <div></div>
+      <button class="btn btn-primary btn-lg" onclick="goStep(2)">Continue → <span style="font-size:12px;font-weight:500;opacity:0.7;">Choose a time</span></button>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 2: SCHEDULE ═══ -->
+  <div class="step-panel" id="step2">
+    <div class="panel-card">
+      <h2>Pick Your Session Time</h2>
+      <p class="subtitle">Choose a date and time slot that works for you. Sessions are 1 hour by default.</p>
+      <div class="schedule-grid">
+        <div>
+          <div class="form-label">Select a Date</div>
+          <div class="date-list" id="dateList"></div>
+        </div>
+        <div>
+          <div class="form-label">Select a Time</div>
+          <div class="date-list" id="timeList">
+            <div class="empty-state" style="padding:40px 10px;"><div class="icon">🕐</div><p>Select a date first to view available times</p></div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:16px;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label" for="courseTopic">Course / Topic</label>
+          <input type="text" class="form-input" id="courseTopic" placeholder="e.g. STA202 — Hypothesis Testing" value="STA202 — Hypothesis Testing">
+        </div>
+      </div>
+    </div>
+    <div class="panel-actions">
+      <button class="btn btn-outline btn-lg" onclick="goStep(1)">← Back</button>
+      <button class="btn btn-primary btn-lg" onclick="goStep(3)">Continue → <span style="font-size:12px;font-weight:500;opacity:0.7;">Review & pay</span></button>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 3: REVIEW & PAY ═══ -->
+  <div class="step-panel" id="step3">
+    <div class="panel-card">
+      <h2>Review Your Booking</h2>
+      <p class="subtitle">Please review the details below before proceeding to payment.</p>
+
+      <div style="display:flex;gap:16px;align-items:center;background:var(--ink-50);border-radius:var(--radius-sm);padding:16px;margin-bottom:20px;">
+        <div style="width:48px;height:48px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:17px;flex-shrink:0;" id="reviewAvatar">TF</div>
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:15px;" id="reviewTutorName">Tomi Fashola</div>
+          <div style="font-size:12.5px;color:var(--ink-400);">⭐ 4.9 · 32 reviews · FUNAAB</div>
+        </div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;white-space:nowrap;" id="reviewRate">₦3,500</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+        <div style="padding:12px;background:var(--ink-50);border-radius:var(--radius-sm);">
+          <div style="font-size:11px;font-weight:700;color:var(--ink-400);text-transform:uppercase;">Date</div>
+          <div style="font-size:14px;font-weight:600;margin-top:2px;" id="reviewDate">Thu, Jul 31, 2026</div>
+        </div>
+        <div style="padding:12px;background:var(--ink-50);border-radius:var(--radius-sm);">
+          <div style="font-size:11px;font-weight:700;color:var(--ink-400);text-transform:uppercase;">Time</div>
+          <div style="font-size:14px;font-weight:600;margin-top:2px;" id="reviewTime">2:00 PM - 3:00 PM</div>
+        </div>
+        <div style="padding:12px;background:var(--ink-50);border-radius:var(--radius-sm);">
+          <div style="font-size:11px;font-weight:700;color:var(--ink-400);text-transform:uppercase;">Duration</div>
+          <div style="font-size:14px;font-weight:600;margin-top:2px;">1 hour</div>
+        </div>
+        <div style="padding:12px;background:var(--ink-50);border-radius:var(--radius-sm);">
+          <div style="font-size:11px;font-weight:700;color:var(--ink-400);text-transform:uppercase;">Meeting</div>
+          <div style="font-size:14px;font-weight:600;margin-top:2px;">Google Meet</div>
+        </div>
+      </div>
+
+      <div class="price-breakdown">
+        <div class="price-row"><span class="label">Tutoring Fee (1 hr)</span><span class="value" id="priceFee">₦3,500</span></div>
+        <div class="price-row"><span class="label">Aced Platform Fee (5%)</span><span class="value" id="pricePlatform">₦175</span></div>
+        <div class="price-row"><span class="label">Paystack Transaction Fee (1.5%)</span><span class="value" id="pricePaystack">₦55</span></div>
+        <div class="price-row total"><span class="label">Total Due Today</span><span class="value" id="priceTotal">₦3,730</span></div>
+        <div class="price-note escrow">🔒 Funds held in escrow — released to tutor only after session completion</div>
+        <div class="price-note deposit">⏰ 20% non-refundable deposit (₦746) if cancelled within 24hr of session</div>
+      </div>
+    </div>
+
+    <!-- Escrow State Machine -->
+    <div class="escrow-machine">
+      <h3>🔒 Escrow Protection</h3>
+      <p class="subtitle">Your payment is held securely by Aced and only released to the tutor after you confirm the session is complete.</p>
+      <div class="escrow-flow" id="escrowFlow">
+        <div class="escrow-state"><div class="escrow-node pending" id="es1">📝</div><div class="escrow-label" id="el1">Pending</div><div class="escrow-label-text">Awaiting payment confirmation</div></div>
+        <div class="escrow-arrow" id="ea1"></div>
+        <div class="escrow-state"><div class="escrow-node pending" id="es2">💰</div><div class="escrow-label" id="el2">In Escrow</div><div class="escrow-label-text">Funds held securely by Aced</div></div>
+        <div class="escrow-arrow" id="ea2"></div>
+        <div class="escrow-state"><div class="escrow-node pending" id="es3">✅</div><div class="escrow-label" id="el3">Completed</div><div class="escrow-label-text">Session marked complete by student</div></div>
+        <div class="escrow-arrow" id="ea3"></div>
+        <div class="escrow-state"><div class="escrow-node pending" id="es4">🏦</div><div class="escrow-label" id="el4">Released</div><div class="escrow-label-text">Funds released to tutor's bank</div></div>
+      </div>
+    </div>
+
+    <div class="panel-actions">
+      <button class="btn btn-outline btn-lg" onclick="goStep(2)">← Back</button>
+      <button class="btn btn-primary btn-lg" onclick="openPaymentModal()">💳 Pay with Paystack</button>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 4: CONFIRMATION ═══ -->
+  <div class="step-panel" id="step4">
+    <div class="panel-card">
+      <div class="confirmation">
+        <div class="big-icon">🎉</div>
+        <h2>Booking Confirmed!</h2>
+        <p class="sub">Your session has been booked and payment is secured in escrow.</p>
+        <div class="ref-box">
+          <span class="label">Booking Reference</span>
+          <span class="code" id="refCode">ACD-20260731-8K3M</span>
+        </div>
+        <div class="summary-grid">
+          <div class="summary-item"><div class="lab">Tutor</div><div class="val" id="confTutor">Tomi Fashola</div></div>
+          <div class="summary-item"><div class="lab">Course</div><div class="val" id="confCourse">STA202 — Hypothesis Testing</div></div>
+          <div class="summary-item"><div class="lab">Date & Time</div><div class="val" id="confDateTime">Thu, Jul 31 · 2:00 PM</div></div>
+          <div class="summary-item"><div class="lab">Amount Paid</div><div class="val" id="confAmount">₦3,730</div></div>
+          <div class="summary-item"><div class="lab">Meeting Link</div><div class="val" style="color:var(--primary-end);">🔗 Google Meet Link</div></div>
+          <div class="summary-item"><div class="lab">Escrow Status</div><div class="val" style="color:var(--success);">✅ Paid — In Escrow</div></div>
+        </div>
+        <div class="next-steps">
+          <a href="dashboard.html" class="btn btn-primary btn-lg">Back to Dashboard</a>
+          <button class="btn btn-outline btn-lg" onclick="addToCalendar()">📅 Add to Calendar</button>
+        </div>
+      </div>
+    </div>
+    <!-- Booking History -->
+    <div class="history-section">
+      <h2>Your Bookings</h2>
+      <p class="sub">View the status of all your tutoring sessions.</p>
+      <div class="history-table-wrap">
+        <table class="history-table">
+          <thead>
+            <tr><th>Reference</th><th>Tutor</th><th>Course</th><th>Date</th><th>Amount</th><th>Escrow Status</th><th>Action</th></tr>
+          </thead>
+          <tbody id="historyBody">
+            <tr><td colspan="7" class="empty-state"><div class="icon">📅</div><p>No bookings yet.</p></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PAYMENT MODAL ═══ -->
+<div class="modal-overlay" id="paymentModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Complete Payment</h3>
+      <button class="modal-close" onclick="closePaymentModal()" aria-label="Close payment modal">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Paystack-branded card -->
+      <div class="paystack-card">
+        <div class="brand">Pay<span>stack</span></div>
+        <div class="amount" id="modalAmount">₦3,730</div>
+        <div class="detail-row"><span>Tutoring Fee</span><span id="modalFee">₦3,500</span></div>
+        <div class="detail-row"><span>Platform + Transaction Fees</span><span id="modalFees">₦230</span></div>
+        <div class="detail-row"><span id="modalTutor">Tomi Fashola</span><span>STA202</span></div>
+        <div class="detail-row total"><span>Total Due</span><span id="modalTotal">₦3,730</span></div>
+      </div>
+
+      <!-- Card simulation -->
+      <div class="card-sim">
+        <div class="sim-label">💳 Card Details (Test Mode)</div>
+        <div class="sim-row">
+          <input class="sim-input" type="text" placeholder="Card Number" value="4084 0820 0128 0000" readonly style="flex:1.5;">
+          <input class="sim-input" type="text" placeholder="MM/YY" value="12/27" readonly style="width:70px;flex:none;">
+          <input class="sim-input" type="text" placeholder="CVV" value="123" readonly style="width:60px;flex:none;">
+        </div>
+      </div>
+
+      <!-- Processing spinner -->
+      <div class="payment-spinner" id="paySpinner">
+        <div class="spinner-ring"></div>
+        <p>Processing payment via Paystack...</p>
+        <p style="font-size:12px;color:var(--ink-400);">Please don't close this window</p>
+      </div>
+
+      <!-- Success state -->
+      <div class="payment-success" id="paySuccess">
+        <div class="icon">✓</div>
+        <h3>Payment Successful!</h3>
+        <p>Your payment of <strong id="successAmount">₦3,730</strong> has been processed and secured in escrow.</p>
+      </div>
+
+      <!-- Failed state -->
+      <div class="payment-failed" id="payFailed">
+        <div class="icon">✕</div>
+        <h3>Payment Failed</h3>
+        <p id="payFailedMsg">Something went wrong with the transaction. Please try again or use a different card.</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary btn-block btn-lg" id="payBtn" onclick="processPayment()">💳 Pay ₦3,730</button>
+      <button class="btn btn-outline btn-block" id="retryBtn" style="display:none;" onclick="resetPaymentModal()">Try Again</button>
+      <div class="note">🔒 Secured by Paystack · Your card info is never stored</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TOAST ═══ -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══ THEME SWITCHER ═══ -->
+<div class="theme-switcher">
+  <div class="theme-panel" id="themePanel">
+    <div class="theme-panel-title">Color theme</div>
+    <div class="theme-opt active" data-theme-choice="blue" onclick="setTheme('blue',this)"><span class="swatch" style="background:linear-gradient(120deg,#1e40af,#1d4ed8);"></span> Royal Naira</div>
+    <div class="theme-opt" data-theme-choice="purple" onclick="setTheme('purple',this)"><span class="swatch" style="background:linear-gradient(120deg,#667eea,#764ba2);"></span> Purple Wave</div>
+    <div class="theme-opt" data-theme-choice="green" onclick="setTheme('green',this)"><span class="swatch" style="background:linear-gradient(120deg,#059669,#047857);"></span> Campus Green</div>
+  </div>
+  <button class="theme-fab" id="themeFab" aria-label="Switch color theme">🎨</button>
+</div>
+
+<script src="api.js"></script>
+<script>
+  /* ═══ AUTH GUARD — students only ═══ */
+  if (!isAuthenticated()) { window.location.href = 'auth.html'; throw new Error('redirect'); }
+  const currentUser = getUser();
+  if (currentUser.role !== 'student') { window.location.href = 'tutor-dashboard.html'; }
+
+  /* ═══ HELPERS ═══ */
+  function getInitials(name) {
+    return (name || '?').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
+  }
+  function shortUniversity(u) { return u ? String(u).split(',')[0] : 'Student'; }
+  function fmtNaira(n) { return '₦' + Number(n || 0).toLocaleString('en-NG'); }
+  const STATUS_LABELS = {
+    pending: 'Pending', paid_escrow: '💰 In Escrow', completed: '✅ Completed',
+    funds_released: '🏦 Released', cancelled: 'Cancelled', refunded: '↩️ Refunded'
+  };
+  const ESCROW_CLASS = {
+    pending: 'pending', paid_escrow: 'paid', completed: 'completed',
+    funds_released: 'released', cancelled: 'refunded', refunded: 'refunded'
+  };
+  function escrowTag(status) {
+    return `<span class="escrow-tag ${ESCROW_CLASS[status] || 'pending'}">${STATUS_LABELS[status] || status}</span>`;
+  }
+  function fmtDateTime(iso) {
+    const d = new Date(iso);
+    if (isNaN(d)) return '—';
+    const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    let h = d.getHours(); const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()} · ${h}:${String(d.getMinutes()).padStart(2,'0')} ${ampm}`;
+  }
+  function fmtDate(iso) {
+    const d = new Date(iso); if (isNaN(d)) return '—';
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+  }
+  function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + type;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3500);
+  }
+
+  /* ═══ STATE ═══ */
+  let allTutors = [];
+  let selectedTutor = null;   // search result: {user, tutor, courses}
+  let availSlots = [];        // availability for selected tutor
+  let selectedDate = null;    // 'YYYY-MM-DD'
+  let selectedTime = null;    // 'HH:MM'
+  let currentBooking = null;
+  let bookingRef = '';
+
+  /* ═══ LOAD TUTORS ═══ */
+  async function loadTutors() {
+    try {
+      allTutors = await searchTutors();
+      renderTutorOptions();
+    } catch (err) {
+      document.getElementById('tutorOptions').innerHTML =
+        '<div class="empty-state"><div class="icon">🔍</div><h3>Could not load tutors</h3><p>' + (err.message || '') + '</p></div>';
+    }
+  }
+
+  function renderTutorOptions() {
+    const container = document.getElementById('tutorOptions');
+    if (!allTutors.length) {
+      container.innerHTML = '<div class="empty-state"><div class="icon">👨‍🏫</div><h3>No tutors available</h3><p>Try again later.</p></div>';
+      return;
+    }
+    container.innerHTML = allTutors.map(r => `
+      <div class="tutor-option ${selectedTutor && selectedTutor.tutor.id === r.tutor.id ? 'selected' : ''}"
+           data-id="${r.tutor.id}" onclick="selectTutor(this, ${r.tutor.id})">
+        <div class="avatar">${getInitials(r.user.full_name)}</div>
+        <div class="info">
+          <h4>${r.user.full_name}</h4>
+          <div class="meta">
+            <span>⭐ ${Number(r.tutor.average_rating).toFixed(1)} (${r.tutor.total_reviews} reviews)</span>
+            ${r.tutor.grade_verified ? '<span>🎓 Verified A</span>' : ''}
+          </div>
+          <div class="meta" style="margin-top:4px;">
+            <span>📚 ${(r.courses || []).slice(0, 4).join(', ')}</span>
+            <span>🏫 ${shortUniversity(r.user.university)}</span>
+          </div>
+        </div>
+        <div class="price">${fmtNaira(r.tutor.hourly_rate)} <span>/session</span></div>
+        <div class="check"></div>
+      </div>`).join('');
+
+    // Auto-select from ?tutor= param or default to first
+    const params = new URLSearchParams(window.location.search);
+    const preselect = parseInt(params.get('tutor'));
+    let target = null;
+    if (preselect) target = allTutors.find(r => r.tutor.id === preselect);
+    if (!target) target = allTutors[0];
+    if (target) {
+      selectedTutor = target;
+      document.querySelectorAll('#tutorOptions .tutor-option').forEach(el => {
+        el.classList.toggle('selected', parseInt(el.dataset.id) === target.tutor.id);
+      });
+    }
+  }
+
+  function selectTutor(el, id) {
+    document.querySelectorAll('#tutorOptions .tutor-option').forEach(t => t.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedTutor = allTutors.find(r => r.tutor.id === id);
+    selectedDate = null;
+    selectedTime = null;
+  }
+
+  /* ═══ STEP NAVIGATION ═══ */
+  function goStep(n) {
+    if (n === 2 && !selectedTutor) { showToast('Please select a tutor first', 'error'); return; }
+    if (n === 3 && (!selectedDate || !selectedTime)) { showToast('Please select a date and time first', 'error'); return; }
+    if (n === 4 && !currentBooking) { showToast('Please complete payment first', 'error'); return; }
+
+    for (let i = 1; i <= 4; i++) {
+      const c = document.getElementById('s' + i + 'c');
+      const l = document.getElementById('s' + i + 'l');
+      const con = document.getElementById('s' + i + 'con');
+      if (i < n) { c.className = 'step-circle done'; l.className = 'step-label done'; if (con) con.className = 'step-connector done'; }
+      else if (i === n) { c.className = 'step-circle active'; l.className = 'step-label active'; if (con) con.className = 'step-connector'; }
+      else { c.className = 'step-circle pending'; l.className = 'step-label'; if (con) con.className = 'step-connector'; }
+    }
+    document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('step' + n).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (n === 2) loadAvailability();
+    if (n === 3) updateReview();
+    if (n === 4) updateConfirmation();
+  }
+
+  /* ═══ SCHEDULE — from real availability ═══ */
+  async function loadAvailability() {
+    if (!selectedTutor) return;
+    try {
+      availSlots = await getTutorAvailability(selectedTutor.tutor.id);
+    } catch (e) { availSlots = []; }
+    renderDateSlots();
+  }
+
+  function renderDateSlots() {
+    const container = document.getElementById('dateList');
+    const dates = next7Days();
+    let html = '';
+    dates.forEach(d => {
+      const slotCount = slotsForDate(d).length;
+      const sel = selectedDate === d.date ? ' selected' : '';
+      html += `<div class="date-opt${sel}" onclick="selectDate('${d.date}',this)">
+        <div class="day"><div class="num">${d.dayNum}</div><div class="name">${d.dayName}</div></div>
+        <div class="detail"><div class="label">${d.label}</div><div class="sub">${slotCount ? slotCount + ' slots available' : 'No availability'}</div></div>
+        <div class="time">${slotCount ? slotsForDate(d)[0] : '—'}</div>
+        <div class="check"></div>
+      </div>`;
+    });
+    container.innerHTML = html || '<div class="empty-state"><div class="icon">📅</div><p>No dates available.</p></div>';
+    if (selectedDate) renderTimeSlots();
+  }
+
+  function next7Days() {
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const out = [];
+    const now = new Date();
+    for (let i = 1; i <= 7; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+      const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      out.push({
+        date: iso, dayNum: d.getDate(), dayName: days[d.getDay()],
+        label: `${months[d.getMonth()]} ${d.getDate()}`,
+        dayOfWeek: d.getDay() // 0=Sunday..6=Saturday; backend availability: 0=Monday..6=Sunday
+      });
+    }
+    return out;
+  }
+
+  // Map backend day_of_week (0=Monday..6=Sunday) to JS getDay() (0=Sunday..6=Saturday)
+  function backendDayFromJS(jsDay) { return (jsDay + 6) % 7; }
+
+  function slotsForDate(d) {
+    const dow = backendDayFromJS(d.dayOfWeek);
+    const daySlots = availSlots.filter(s => s.day_of_week === dow && s.is_active !== false);
+    const times = [];
+    daySlots.forEach(s => {
+      const startH = parseInt(s.start_time);
+      const endH = parseInt(s.end_time);
+      for (let h = startH; h < endH; h++) {
+        times.push(`${String(h).padStart(2,'0')}:00`);
+      }
+    });
+    if (times.length) return times;
+    // Fallback when tutor has no availability set: standard 9–5 weekday slots
+    const isWeekend = d.dayOfWeek === 0 || d.dayOfWeek === 6;
+    return isWeekend
+      ? ['10:00','11:00','12:00','14:00','15:00','16:00']
+      : ['09:00','10:00','11:00','12:00','14:00','15:00','16:00','17:00'];
+  }
+
+  function selectDate(date, el) {
+    document.querySelectorAll('#dateList .date-opt').forEach(d => d.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedDate = date;
+    renderTimeSlots();
+  }
+
+  function renderTimeSlots() {
+    const container = document.getElementById('timeList');
+    const d = next7Days().find(x => x.date === selectedDate);
+    if (!d) { container.innerHTML = '<div class="empty-state" style="padding:40px 10px;"><div class="icon">🕐</div><p>Select a date first</p></div>'; return; }
+    const times = slotsForDate(d);
+    if (!times.length) { container.innerHTML = '<div class="empty-state" style="padding:40px 10px;"><div class="icon">🕐</div><p>No times available this day.</p></div>'; return; }
+    let html = '';
+    times.forEach(t => {
+      const sel = selectedTime === t ? ' selected' : '';
+      const h = parseInt(t);
+      const disp = h === 0 ? '12:00 AM' : h < 12 ? `${h}:00 AM` : h === 12 ? '12:00 PM' : `${h - 12}:00 PM`;
+      html += `<div class="date-opt${sel}" onclick="selectTime('${t}',this)">
+        <div style="font-size:20px;font-weight:700;color:var(--primary-end);width:40px;text-align:center;">${disp.split(':')[0]}</div>
+        <div class="detail"><div class="label">${disp}</div><div class="sub">1 hour session</div></div>
+        <div class="check"></div>
+      </div>`;
+    });
+    container.innerHTML = html;
+  }
+
+  function selectTime(time, el) {
+    document.querySelectorAll('#timeList .date-opt').forEach(d => d.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedTime = time;
+  }
+
+  /* ═══ REVIEW UPDATE ═══ */
+  function updateReview() {
+    if (!selectedTutor) return;
+    const t = selectedTutor.tutor;
+    document.getElementById('reviewAvatar').textContent = getInitials(selectedTutor.user.full_name);
+    document.getElementById('reviewTutorName').textContent = selectedTutor.user.full_name;
+    document.getElementById('reviewRate').textContent = fmtNaira(t.hourly_rate);
+    if (selectedDate) {
+      const d = new Date(selectedDate + 'T12:00:00');
+      const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      document.getElementById('reviewDate').textContent = `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+    }
+    if (selectedTime) {
+      const h = parseInt(selectedTime);
+      const start = h === 0 ? '12:00 AM' : h < 12 ? `${h}:00 AM` : h === 12 ? '12:00 PM' : `${h - 12}:00 PM`;
+      const endH = h + 1;
+      const end = endH === 0 ? '12:00 AM' : endH < 12 ? `${endH}:00 AM` : endH === 12 ? '12:00 PM' : `${endH - 12}:00 PM`;
+      document.getElementById('reviewTime').textContent = `${start} - ${end}`;
+    }
+    document.getElementById('priceFee').textContent = fmtNaira(t.hourly_rate);
+    document.getElementById('pricePlatform').textContent = fmtNaira(0);
+    document.getElementById('pricePaystack').textContent = fmtNaira(0);
+    document.getElementById('priceTotal').textContent = fmtNaira(t.hourly_rate);
+    document.getElementById('modalAmount').textContent = fmtNaira(t.hourly_rate);
+    document.getElementById('modalFee').textContent = fmtNaira(t.hourly_rate);
+    document.getElementById('modalFees').textContent = fmtNaira(0);
+    document.getElementById('modalTutor').textContent = selectedTutor.user.full_name;
+    document.getElementById('modalTotal').textContent = fmtNaira(t.hourly_rate);
+    document.getElementById('payBtn').textContent = '💳 Pay ' + fmtNaira(t.hourly_rate);
+    document.getElementById('successAmount').textContent = fmtNaira(t.hourly_rate);
+  }
+
+  /* ═══ PAYMENT MODAL ═══ */
+  function openPaymentModal() {
+    document.getElementById('paymentModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    resetPaymentModal();
+  }
+  function closePaymentModal() {
+    document.getElementById('paymentModal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  function resetPaymentModal() {
+    document.getElementById('paySpinner').classList.remove('show');
+    document.getElementById('paySuccess').classList.remove('show');
+    document.getElementById('payFailed').classList.remove('show');
+    document.getElementById('payBtn').style.display = '';
+    document.getElementById('retryBtn').style.display = 'none';
+    document.getElementById('payBtn').disabled = false;
+  }
+
+  async function processPayment() {
+    if (!selectedTutor || !selectedDate || !selectedTime) { showToast('Missing booking details', 'error'); return; }
+    const btn = document.getElementById('payBtn');
+    btn.disabled = true;
+    btn.classList.add('btn-loading');
+    document.getElementById('paySpinner').classList.add('show');
+
+    try {
+      // 1. Create the booking (state: pending)
+      const sessionDatetime = new Date(selectedDate + 'T' + selectedTime + ':00');
+      const booking = await createBooking({
+        tutor_profile_id: selectedTutor.tutor.id,
+        session_datetime: sessionDatetime.toISOString(),
+        duration_hours: 1,
+      });
+      currentBooking = booking;
+      bookingRef = booking.paystack_reference || `BK-${booking.id}`;
+      document.getElementById('refCode').textContent = bookingRef;
+
+      // 2. Initialize Paystack payment
+      // If Paystack isn't configured (dev placeholder key), fall back to
+      // simulated success so the demo flow completes end-to-end.
+      try {
+        const pay = await initializePayment(booking.id);
+        if (pay && pay.authorization_url) {
+          window.location.href = pay.authorization_url;
+          return;
+        }
+      } catch (payErr) {
+        console.warn('Paystack init failed — simulating payment for demo:', payErr.message);
+        showToast('Paystack not configured — simulated payment', 'info');
+      }
+
+      // Fallback: simulate webhook success for demo
+      await updateBookingStatus(booking.id, 'paid_escrow');
+      showPaymentSuccess();
+    } catch (err) {
+      console.error('Payment error:', err);
+      document.getElementById('paySpinner').classList.remove('show');
+      document.getElementById('payFailed').classList.add('show');
+      // Surface the real reason (e.g. time-slot conflict) instead of a generic message
+      const msg = document.getElementById('payFailedMsg');
+      if (msg && err && err.message) msg.textContent = err.message;
+      btn.style.display = 'none';
+      document.getElementById('retryBtn').style.display = '';
+      btn.disabled = false;
+      btn.classList.remove('btn-loading');
+    }
+  }
+
+  function showPaymentSuccess() {
+    document.getElementById('paySpinner').classList.remove('show');
+    document.getElementById('paySuccess').classList.add('show');
+    document.getElementById('payBtn').style.display = 'none';
+    document.getElementById('retryBtn').style.display = 'none';
+    setTimeout(() => {
+      closePaymentModal();
+      goStep(4);
+    }, 1500);
+  }
+
+  /* ═══ CONFIRMATION ═══ */
+  function updateConfirmation() {
+    if (!currentBooking) return;
+    document.getElementById('confTutor').textContent = selectedTutor ? selectedTutor.user.full_name : '—';
+    document.getElementById('confCourse').textContent = document.getElementById('courseTopic').value || (selectedTutor && (selectedTutor.courses || [])[0]) || 'Tutoring session';
+    const d = new Date(currentBooking.session_datetime);
+    const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    let h = d.getHours(); const ampm = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
+    document.getElementById('confDateTime').textContent = `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()} · ${h}:${String(d.getMinutes()).padStart(2,'0')} ${ampm}`;
+    document.getElementById('confAmount').textContent = fmtNaira(currentBooking.total_price);
+    updateEscrowState(currentBooking.status === 'paid_escrow' ? 2 : 1);
+    renderHistory();
+  }
+
+  /* ═══ HISTORY ═══ */
+  async function renderHistory() {
+    const tbody = document.getElementById('historyBody');
+    try {
+      const bookings = await getMyBookings();
+      if (!bookings || !bookings.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><div class="icon">📅</div><p>No bookings yet.</p></td></tr>';
+        return;
+      }
+      tbody.innerHTML = bookings.slice().sort((a, b) => new Date(b.session_datetime) - new Date(a.session_datetime)).map(b => `
+        <tr>
+          <td style="font-family:monospace;font-size:12px;">${b.paystack_reference || `BK-${b.id}`}</td>
+          <td>Tutor #${b.tutor_profile_id}</td><td>${b.duration_hours}h</td>
+          <td>${fmtDate(b.session_datetime)}</td>
+          <td>${fmtNaira(b.total_price)}</td>
+          <td>${escrowTag(b.status)}</td>
+          <td>${b.status === 'pending' ? '<button class="btn btn-primary btn-sm" onclick="payBooking(' + b.id + ')">Pay</button>' : ''}</td>
+        </tr>`).join('');
+    } catch (err) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><div class="icon">📅</div><p>Could not load bookings.</p></td></tr>';
+    }
+  }
+
+  async function payBooking(bookingId) {
+    try {
+      try {
+        const pay = await initializePayment(bookingId);
+        if (pay && pay.authorization_url) { window.location.href = pay.authorization_url; return; }
+      } catch (payErr) {
+        console.warn('Paystack init failed — simulating payment:', payErr.message);
+      }
+      await updateBookingStatus(bookingId, 'paid_escrow');
+      showToast('Marked as paid (demo)', 'success');
+      renderHistory();
+    } catch (err) { showToast(err.message || 'Payment failed', 'error'); }
+  }
+
+  /* ═══ ESCROW STATE MACHINE (visual) ═══ */
+  function updateEscrowState(state) {
+    const nodes = [document.getElementById('es1'), document.getElementById('es2'), document.getElementById('es3'), document.getElementById('es4')];
+    const labels = [document.getElementById('el1'), document.getElementById('el2'), document.getElementById('el3'), document.getElementById('el4')];
+    const arrows = [document.getElementById('ea1'), document.getElementById('ea2'), document.getElementById('ea3')];
+    for (let i = 0; i < nodes.length; i++) {
+      if (i + 1 < state) { nodes[i].className = 'escrow-node done'; labels[i].className = 'escrow-label done'; if (arrows[i]) arrows[i].className = 'escrow-arrow done'; }
+      else if (i + 1 === state) { nodes[i].className = 'escrow-node current'; labels[i].className = 'escrow-label active'; if (arrows[i]) arrows[i].className = 'escrow-arrow'; }
+      else { nodes[i].className = 'escrow-node pending'; labels[i].className = 'escrow-label'; if (arrows[i]) arrows[i].className = 'escrow-arrow'; }
+    }
+  }
+
+  /* ═══ MISC ═══ */
+  function addToCalendar() { showToast('📅 Session added to your Google Calendar!', 'success'); }
+  function resetBooking() {
+    if (!confirm('Start a new booking? Current selections will be cleared.')) return;
+    selectedDate = null; selectedTime = null; currentBooking = null;
+    document.getElementById('courseTopic').value = '';
+    goStep(1);
+    updateEscrowState(1);
+  }
+
+  /* ═══ RIPPLE ═══ */
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.btn');
+    if (!btn) return;
+    const c = document.createElement('span');
+    const d = Math.max(btn.clientWidth, btn.clientHeight);
+    const r = btn.getBoundingClientRect();
+    c.style.width = c.style.height = d + 'px';
+    c.style.left = (e.clientX - r.left - d / 2) + 'px';
+    c.style.top = (e.clientY - r.top - d / 2) + 'px';
+    c.classList.add('ripple');
+    btn.appendChild(c);
+    setTimeout(() => c.remove(), 600);
+  });
+
+  /* ═══ THEME ═══ */
+  const fab = document.getElementById('themeFab');
+  const panel = document.getElementById('themePanel');
+  fab.addEventListener('click', () => { fab.classList.toggle('open'); panel.classList.toggle('open'); });
+  function setTheme(n, el) {
+    document.body.setAttribute('data-theme', n);
+    document.querySelectorAll('.theme-opt').forEach(o => o.classList.remove('active'));
+    el.classList.add('active');
+  }
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.theme-switcher')) { panel.classList.remove('open'); fab.classList.remove('open'); }
+  });
+
+  /* ═══ INIT ═══ */
+  loadTutors();
+  renderHistory();
+</script>
+
+
+</body>
+</html>

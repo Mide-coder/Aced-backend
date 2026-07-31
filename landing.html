@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aced — Your Campus. Your Tutor. Your A.</title>
+<link rel="icon" type="image/png" href="assets/aced-logo.png">
+<!-- Royal Naira Theme (Default) -->
+<style>
+  :root{
+    --primary-start:#1e40af;
+    --primary-end:#1d4ed8;
+    --secondary:#3b82f6;
+    --accent:#f97316;
+    --theme-name:"Royal Naira";
+    --gradient:linear-gradient(120deg,var(--primary-start),var(--primary-end));
+  }
+  [data-theme="purple"]{
+    --primary-start:#667eea;
+    --primary-end:#764ba2;
+    --secondary:#8b5cf6;
+    --accent:#10b981;
+    --theme-name:"Purple Wave";
+    --gradient:linear-gradient(120deg,var(--primary-start),var(--primary-end));
+  }
+  [data-theme="green"]{
+    --primary-start:#059669;
+    --primary-end:#047857;
+    --secondary:#34d399;
+    --accent:#f59e0b;
+    --theme-name:"Campus Green";
+    --gradient:linear-gradient(120deg,var(--primary-start),var(--primary-end));
+  }
+
+  :root{
+    --ink-900:#1f2937;
+    --ink-600:#4b5563;
+    --ink-400:#9ca3af;
+    --bg:#ffffff;
+    --bg-soft:#f8f7fb;
+    --line:#eceaf2;
+    --radius:16px;
+    --shadow-sm:0 2px 8px rgba(31,41,55,0.06);
+    --shadow-md:0 12px 32px rgba(31,41,55,0.10);
+    --shadow-lg:0 24px 60px rgba(31,41,55,0.16);
+    --ease:cubic-bezier(.4,0,.2,1);
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    color:var(--ink-900);
+    background:var(--bg);
+    line-height:1.5;
+    overflow-x:hidden;
+  }
+  .display{font-family:'Space Grotesk','Inter',sans-serif;letter-spacing:-0.02em;}
+  img,svg{display:block;max-width:100%;}
+  a{text-decoration:none;color:inherit;}
+  ul{list-style:none;}
+  button{font-family:inherit;border:none;cursor:pointer;background:none;}
+  .container{max-width:1200px;margin:0 auto;padding:0 24px;}
+  section{padding:96px 0;}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;
+    color:var(--primary-end);background:color-mix(in srgb, var(--primary-start) 12%, white);
+    padding:6px 14px;border-radius:999px;margin-bottom:18px;
+    transition:background 0.3s var(--ease), color 0.3s var(--ease);
+  }
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif;letter-spacing:-0.02em;color:var(--ink-900);}
+  h2{font-size:clamp(28px,3.4vw,42px);font-weight:700;}
+  .section-sub{color:var(--ink-600);font-size:17px;max-width:560px;margin-top:14px;}
+  .center{text-align:center;margin-left:auto;margin-right:auto;}
+
+  .btn{
+    position:relative;overflow:hidden;
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:15px 28px;border-radius:12px;font-weight:700;font-size:15px;
+    transition:transform 0.3s var(--ease), box-shadow 0.3s var(--ease), background 0.3s var(--ease);
+    white-space:nowrap;
+  }
+  .btn:hover{transform:scale(1.02);}
+  .btn:active{transform:scale(0.98);}
+  .btn-primary{
+    background:var(--gradient);color:#fff;
+    box-shadow:0 10px 24px -8px color-mix(in srgb, var(--primary-end) 60%, transparent);
+  }
+  .btn-primary:hover{box-shadow:0 16px 32px -8px color-mix(in srgb, var(--primary-end) 70%, transparent);}
+  .btn-outline{
+    background:transparent;color:var(--ink-900);border:2px solid var(--line);
+  }
+  .btn-outline:hover{border-color:var(--primary-start);color:var(--primary-end);}
+  .btn-sm{padding:10px 18px;font-size:14px;border-radius:10px;}
+  .ripple{
+    position:absolute;border-radius:50%;background:rgba(255,255,255,0.55);
+    transform:scale(0);animation:rippleAnim 0.6s var(--ease);pointer-events:none;
+  }
+  @keyframes rippleAnim{to{transform:scale(3);opacity:0;}}
+
+  .navbar{
+    position:fixed;top:0;left:0;right:0;z-index:1000;
+    padding:20px 0;transition:background 0.35s var(--ease), box-shadow 0.35s var(--ease), padding 0.35s var(--ease);
+  }
+  .navbar.solid{
+    background:rgba(255,255,255,0.85);backdrop-filter:blur(14px);
+    box-shadow:0 1px 0 var(--line);padding:14px 0;
+  }
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;}
+  .logo{
+    font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .logo-img{height:32px;width:auto;display:block;}
+  .footer-logo-img{height:30px;width:auto;display:block;}
+  .mobile-logo-img{height:40px;width:auto;display:block;margin-bottom:6px;}
+  .nav-links{display:flex;align-items:center;gap:36px;}
+  .nav-links a{font-weight:600;font-size:14.5px;color:var(--ink-600);transition:color 0.25s var(--ease);position:relative;}
+  .nav-links a:hover{color:var(--ink-900);}
+  .nav-links a::after{
+    content:"";position:absolute;left:0;bottom:-6px;width:0;height:2px;background:var(--gradient);
+    transition:width 0.25s var(--ease);
+  }
+  .nav-links a:hover::after{width:100%;}
+  .nav-actions{display:flex;align-items:center;gap:18px;}
+  .hamburger{display:none;flex-direction:column;gap:5px;width:26px;z-index:1200;}
+  .hamburger span{height:2px;background:var(--ink-900);border-radius:2px;transition:transform 0.3s var(--ease), opacity 0.3s var(--ease);}
+  .mobile-menu{
+    position:fixed;inset:0;background:#fff;z-index:1100;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;
+    transform:translateY(-100%);transition:transform 0.4s var(--ease);
+  }
+  .mobile-menu.open{transform:translateY(0);}
+  .mobile-menu a{font-size:22px;font-weight:700;font-family:'Space Grotesk',sans-serif;}
+
+  .hero{
+    position:relative;padding:170px 0 110px;overflow:hidden;
+    background:
+      radial-gradient(60% 50% at 85% 8%, color-mix(in srgb, var(--secondary) 22%, transparent), transparent 70%),
+      radial-gradient(50% 40% at 5% 100%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%),
+      var(--bg-soft);
+    transition:background 0.5s var(--ease);
+  }
+  .hero-grid{display:grid;grid-template-columns:1.1fr 0.9fr;gap:56px;align-items:center;}
+  .hero-badge{
+    display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);
+    padding:8px 16px;border-radius:999px;font-size:13px;font-weight:600;color:var(--ink-600);
+    box-shadow:var(--shadow-sm);margin-bottom:22px;
+  }
+  .hero-badge .flag{font-size:15px;}
+  .hero h1{font-size:clamp(38px,5.4vw,64px);font-weight:700;line-height:1.05;margin-bottom:22px;}
+  .hero h1 .grad{
+    background:var(--gradient);-webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .hero p{font-size:18px;color:var(--ink-600);max-width:480px;margin-bottom:34px;}
+  .hero-ctas{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:44px;}
+
+  .search-mock{
+    background:#fff;border-radius:18px;box-shadow:var(--shadow-lg);padding:10px;
+    display:flex;gap:8px;align-items:center;border:1px solid var(--line);max-width:520px;
+  }
+  .search-mock input{
+    flex:1;border:none;outline:none;padding:14px 16px;font-size:15px;font-family:inherit;color:var(--ink-900);
+    background:transparent;
+  }
+  .search-mock input::placeholder{color:var(--ink-400);}
+  .search-mock .btn-primary{position:relative;}
+  .search-mock .btn-primary::before{
+    content:"";position:absolute;inset:-4px;border-radius:14px;
+    background:var(--gradient);opacity:0.5;z-index:-1;filter:blur(10px);
+    animation:pulseGlow 2.4s ease-in-out infinite;
+  }
+  @keyframes pulseGlow{0%,100%{opacity:0.35;transform:scale(1);}50%{opacity:0.65;transform:scale(1.06);}}
+
+  .hero-visual{position:relative;}
+  .hero-card{
+    background:#fff;border-radius:20px;box-shadow:var(--shadow-lg);padding:26px;
+    border:1px solid var(--line);position:relative;z-index:2;
+  }
+  .hero-card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+  .avatar-row{display:flex;align-items:center;gap:12px;}
+  .avatar{
+    width:46px;height:46px;border-radius:50%;background:var(--gradient);
+    display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px;
+  }
+  .verified-pill{
+    display:inline-flex;align-items:center;gap:5px;background:color-mix(in srgb, var(--accent) 15%, white);
+    color:var(--accent);font-size:12px;font-weight:700;padding:5px 10px;border-radius:999px;
+  }
+  .hero-card-body h4{font-size:17px;margin-bottom:4px;}
+  .hero-card-body p{font-size:13.5px;color:var(--ink-600);margin:0;}
+  .rating-row{display:flex;align-items:center;gap:6px;margin-top:12px;font-size:14px;font-weight:600;}
+  .float-chip{
+    position:absolute;background:#fff;border-radius:14px;box-shadow:var(--shadow-md);
+    padding:12px 16px;font-size:13px;font-weight:700;border:1px solid var(--line);z-index:3;
+    display:flex;align-items:center;gap:8px;
+  }
+  .chip-1{top:-18px;right:-24px;animation:floatY 5s ease-in-out infinite;}
+  .chip-2{bottom:20px;left:-38px;animation:floatY 5s ease-in-out infinite 1.2s;}
+  @keyframes floatY{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:56px;}
+  .step-card{
+    background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:32px 26px;
+    transition:transform 0.3s var(--ease), box-shadow 0.3s var(--ease);position:relative;
+  }
+  .step-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);}
+  .step-num{
+    font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;color:var(--primary-end);
+    letter-spacing:0.06em;margin-bottom:14px;
+  }
+  .step-icon{
+    width:56px;height:56px;border-radius:14px;background:var(--gradient);
+    display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:18px;
+  }
+  .step-card h3{font-size:19px;margin-bottom:8px;}
+  .step-card p{color:var(--ink-600);font-size:14.5px;}
+  .step-arrow{
+    position:absolute;top:50%;right:-24px;transform:translateY(-50%);
+    color:var(--line);font-size:22px;
+  }
+
+  .why{background:var(--bg-soft);}
+  .feature-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;margin-top:56px;}
+  .feature-card{
+    background:#fff;border-radius:var(--radius);padding:28px 22px;border:1px solid var(--line);
+    transition:transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+  }
+  .feature-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);}
+  .feature-icon{font-size:28px;margin-bottom:16px;}
+  .feature-card h3{font-size:16px;margin-bottom:8px;}
+  .feature-card p{font-size:13.5px;color:var(--ink-600);}
+
+  .trust-strip{
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:28px;
+    padding:36px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  }
+  .trust-item{display:flex;align-items:center;gap:10px;color:var(--ink-600);font-weight:700;font-size:14.5px;}
+  .trust-item span.mark{font-size:20px;}
+
+  .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin:56px 0 64px;}
+  .stat-card{text-align:center;padding:28px 16px;border-radius:var(--radius);background:var(--bg-soft);}
+  .stat-num{
+    font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:44px;
+    background:var(--gradient);-webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .stat-label{color:var(--ink-600);font-size:14px;margin-top:6px;font-weight:600;}
+  .testimonial-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;}
+  .testimonial{
+    background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:28px;
+    box-shadow:var(--shadow-sm);
+  }
+  .testimonial p{font-size:15px;color:var(--ink-900);margin-bottom:18px;}
+  .testimonial-author{display:flex;align-items:center;gap:12px;}
+  .testimonial-author .avatar{width:38px;height:38px;font-size:13px;}
+  .testimonial-author div span{display:block;font-size:12.5px;color:var(--ink-400);}
+  .stars{color:var(--accent);font-size:14px;margin-bottom:12px;}
+
+  .pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:56px;}
+  .price-card{
+    border-radius:20px;padding:34px 28px;border:1px solid var(--line);background:#fff;
+    transition:transform 0.3s var(--ease), box-shadow 0.3s var(--ease);position:relative;
+  }
+  .price-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);}
+  .price-card.featured{
+    background:var(--gradient);color:#fff;border:none;transform:scale(1.03);
+  }
+  .price-card.featured:hover{transform:scale(1.03) translateY(-4px);}
+  .price-card.featured .price-tier,
+  .price-card.featured .price-desc{color:rgba(255,255,255,0.85);}
+  .price-tier{font-weight:700;font-size:14px;letter-spacing:0.04em;text-transform:uppercase;color:var(--primary-end);}
+  .price-amount{font-family:'Space Grotesk',sans-serif;font-size:32px;font-weight:700;margin:14px 0 6px;}
+  .price-desc{font-size:13.5px;color:var(--ink-600);margin-bottom:20px;}
+  .price-list{margin-bottom:24px;}
+  .price-list li{font-size:14px;margin-bottom:10px;display:flex;gap:8px;align-items:flex-start;}
+  .popular-badge{
+    position:absolute;top:-13px;left:50%;transform:translateX(-50%);
+    background:var(--accent);color:#fff;font-size:12px;font-weight:700;
+    padding:5px 14px;border-radius:999px;
+  }
+
+  footer{background:#171522;color:#fff;padding:64px 0 28px;}
+  .footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:40px;margin-bottom:48px;}
+  .footer-logo{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;margin-bottom:14px;}
+  .footer-grid p{color:#a3a0b5;font-size:14px;max-width:280px;}
+  .footer-col h4{font-size:13px;text-transform:uppercase;letter-spacing:0.06em;color:#a3a0b5;margin-bottom:16px;}
+  .footer-col a{display:block;color:#d8d6e5;font-size:14.5px;margin-bottom:12px;transition:color 0.25s var(--ease);}
+  .footer-col a:hover{color:#fff;}
+  .social-row{display:flex;gap:12px;margin-top:18px;}
+  .social-row a{
+    width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.08);
+    display:flex;align-items:center;justify-content:center;font-size:15px;
+  }
+  .footer-bottom{
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;
+    border-top:1px solid rgba(255,255,255,0.1);padding-top:24px;color:#83809a;font-size:13.5px;
+  }
+
+  .theme-switcher{
+    position:fixed;bottom:26px;right:26px;z-index:1300;
+    display:flex;flex-direction:column;align-items:flex-end;gap:12px;
+  }
+  .theme-fab{
+    width:56px;height:56px;border-radius:50%;background:var(--gradient);
+    box-shadow:var(--shadow-lg);display:flex;align-items:center;justify-content:center;
+    font-size:22px;color:#fff;transition:transform 0.4s var(--ease);
+  }
+  .theme-fab.open{transform:rotate(135deg);}
+  .theme-panel{
+    background:#fff;border-radius:16px;box-shadow:var(--shadow-lg);padding:16px;
+    border:1px solid var(--line);width:220px;
+    display:flex;flex-direction:column;gap:8px;
+    transform:translateY(10px) scale(0.96);opacity:0;pointer-events:none;
+    transition:transform 0.3s var(--ease), opacity 0.3s var(--ease);
+  }
+  .theme-panel.open{transform:translateY(0) scale(1);opacity:1;pointer-events:auto;}
+  .theme-panel-title{font-size:12px;font-weight:700;text-transform:uppercase;color:var(--ink-400);letter-spacing:0.06em;padding:2px 4px 6px;}
+  .theme-option{
+    display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;font-size:14px;font-weight:600;
+    transition:background 0.2s var(--ease);
+  }
+  .theme-option:hover{background:var(--bg-soft);}
+  .theme-option.active{background:var(--bg-soft);}
+  .swatch{width:20px;height:20px;border-radius:6px;flex-shrink:0;}
+  .theme-option.active::after{content:"✓";margin-left:auto;color:var(--primary-end);font-weight:700;}
+
+  @media (max-width:1199px){
+    .hero-grid{grid-template-columns:1fr;}
+    .hero-visual{order:-1;max-width:420px;margin:0 auto;}
+    .feature-grid{grid-template-columns:repeat(2,1fr);}
+    .footer-grid{grid-template-columns:1.2fr 1fr 1fr;}
+    .footer-col:last-child{grid-column:span 3;}
+  }
+  @media (max-width:900px){
+    .steps{grid-template-columns:1fr;}
+    .step-arrow{display:none;}
+    .pricing-grid{grid-template-columns:1fr;}
+    .price-card.featured{transform:none;}
+    .stats-grid{grid-template-columns:1fr;}
+    .testimonial-grid{grid-template-columns:1fr;}
+  }
+  @media (max-width:767px){
+    section{padding:64px 0;}
+    .nav-links{display:none;}
+    .nav-actions .btn{display:none;}
+    .hamburger{display:flex;}
+    .hero{padding:130px 0 70px;}
+    .hero p{font-size:16px;}
+    .hero-ctas{flex-direction:column;}
+    .hero-ctas .btn{width:100%;}
+    .search-mock{flex-direction:column;align-items:stretch;}
+    .feature-grid{grid-template-columns:1fr;}
+    .trust-strip{justify-content:center;text-align:center;}
+    .footer-grid{grid-template-columns:1fr;}
+    .footer-col:last-child{grid-column:span 1;}
+    .chip-1,.chip-2{display:none;}
+    .theme-panel{width:190px;}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:0.001ms !important;animation-iteration-count:1 !important;transition-duration:0.001ms !important;scroll-behavior:auto !important;}
+  }
+
+  ::selection{background:var(--secondary);color:#fff;}
+  :focus-visible{outline:2px solid var(--primary-end);outline-offset:2px;}
+</style>
+</head>
+<body data-theme="blue">
+
+  <!-- ================= NAVBAR ================= -->
+  <nav class="navbar" id="navbar">
+    <div class="container nav-inner">
+      <a href="#" class="logo"><img src="assets/aced-logo.png" alt="Aced logo" class="logo-img">Aced</a>
+      <div class="nav-links">
+        <a href="#how">Find Tutors</a>
+        <a href="#why">Become a Tutor</a>
+        <a href="#trust">About</a>
+      </div>
+      <div class="nav-actions">
+        <a href="auth.html" class="btn btn-primary btn-sm">Get Started</a>
+        <button class="hamburger" id="hamburger" aria-label="Open menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <img src="assets/aced-logo.png" alt="Aced logo" class="mobile-logo-img">
+    <a href="#how">Find Tutors</a>
+    <a href="#why">Become a Tutor</a>
+    <a href="#trust">About</a>
+    <a href="auth.html" class="btn btn-primary" style="margin-top:12px;">Get Started</a>
+  </div>
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="container hero-grid">
+      <div>
+        <span class="hero-badge"><span class="flag">🇳🇬</span> Built for Nigerian campuses</span>
+        <h1>From Struggle to <span class="grad">Straight A's.</span></h1>
+        <p>Aced connects you with verified tutors from your own campus — students and grads who've already aced the course you're stuck on.</p>
+        <div class="hero-ctas">
+          <a href="auth.html" class="btn btn-primary">Find a Tutor</a>
+          <a href="#why" class="btn btn-outline">Become a Tutor</a>
+        </div>
+        <div class="search-mock">
+          <input type="text" placeholder="Enter course code e.g. CSC201" aria-label="Course code search">
+          <button class="btn btn-primary" onclick="createRipple(event)">Search</button>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="float-chip chip-1">⭐ 4.8 avg rating</div>
+        <div class="hero-card">
+          <div class="hero-card-top">
+            <div class="avatar-row">
+              <div class="avatar">TF</div>
+              <div>
+                <h4 style="margin-bottom:2px;">Tomi F.</h4>
+                <span style="font-size:12.5px;color:var(--ink-400);">FUNAAB · Statistics II</span>
+              </div>
+            </div>
+            <span class="verified-pill">✓ Verified</span>
+          </div>
+          <div class="hero-card-body">
+            <p>"Booked a session before my Stat II resit and finally understood hypothesis testing in 40 minutes."</p>
+            <div class="rating-row">⭐⭐⭐⭐⭐ <span style="color:var(--ink-400);font-weight:500;">(32 reviews)</span></div>
+          </div>
+        </div>
+        <div class="float-chip chip-2">💳 Pay after match</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= HOW IT WORKS ================= -->
+  <section id="how">
+    <div class="container">
+      <div class="center" style="max-width:600px;">
+        <span class="eyebrow">How it works</span>
+        <h2>Three steps between you and your next A</h2>
+        <p class="section-sub center">No endless scrolling. Just your course code and a tutor who's already been where you are.</p>
+      </div>
+      <div class="steps">
+        <div class="step-card">
+          <div class="step-num">STEP 01</div>
+          <div class="step-icon">🔍</div>
+          <h3>Search by Course Code</h3>
+          <p>Type in a code like CSC201 or ACC202 and see every verified tutor on your campus who teaches it.</p>
+          <span class="step-arrow">→</span>
+        </div>
+        <div class="step-card">
+          <div class="step-num">STEP 02</div>
+          <div class="step-icon">🔒</div>
+          <h3>Book & Pay Safely</h3>
+          <p>Pick a time, pay securely through Paystack, and get a WhatsApp confirmation instantly.</p>
+          <span class="step-arrow">→</span>
+        </div>
+        <div class="step-card">
+          <div class="step-num">STEP 03</div>
+          <div class="step-icon">🎓</div>
+          <h3>Ace Your Exams</h3>
+          <p>Meet your tutor, get unstuck, and walk into that exam hall actually ready.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= WHY ACED ================= -->
+  <section class="why" id="why">
+    <div class="container">
+      <div class="center" style="max-width:600px;">
+        <span class="eyebrow">Why Aced</span>
+        <h2>Built by students, for students</h2>
+        <p class="section-sub center">Every detail designed around how Nigerian university students actually study and pay.</p>
+      </div>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-icon">✅</div>
+          <h3>Verified, Not Just Listed</h3>
+          <p>Every tutor is checked against school ID and past academic record before they go live.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🏫</div>
+          <h3>Tutors From Your Campus</h3>
+          <p>Learn from someone who sat the same exam, under the same lecturer, last session.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">💰</div>
+          <h3>Pay After You're Matched</h3>
+          <p>No upfront risk — you only pay once a tutor confirms your session.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📲</div>
+          <h3>WhatsApp Reminders</h3>
+          <p>Session confirmations and reminders sent straight to WhatsApp — no app-checking required.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TRUST ================= -->
+  <section id="trust" style="padding-top:56px;padding-bottom:56px;">
+    <div class="container">
+      <div class="trust-strip">
+        <div class="trust-item"><span class="mark">🎓</span> Piloted at FUNAAB</div>
+        <div class="trust-item"><span class="mark">💳</span> Payments by Paystack</div>
+        <div class="trust-item"><span class="mark">🔐</span> SSL Secured</div>
+        <div class="trust-item"><span class="mark">🇳🇬</span> Trusted by Nigerian Students</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= STATS / TESTIMONIALS ================= -->
+  <section>
+    <div class="container">
+      <div class="center" style="max-width:600px;">
+        <span class="eyebrow">In numbers</span>
+        <h2>Students are already acing it</h2>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-num" data-count="500" data-suffix="+">0</div><div class="stat-label">Sessions Completed</div></div>
+        <div class="stat-card"><div class="stat-num" data-count="50" data-suffix="+">0</div><div class="stat-label">Verified Tutors</div></div>
+        <div class="stat-card"><div class="stat-num" data-count="4.8" data-suffix=" ★" data-decimal="1">0</div><div class="stat-label">Average Rating</div></div>
+      </div>
+      <div class="testimonial-grid">
+        <div class="testimonial">
+          <div class="stars">⭐⭐⭐⭐⭐</div>
+          <p>"I was failing Circuit Theory. Two sessions with my tutor from 300 level and I passed the resit with a B."</p>
+          <div class="testimonial-author">
+            <div class="avatar">CO</div>
+            <div><strong>Chidera O.</strong><span>Electrical Eng., FUNAAB</span></div>
+          </div>
+        </div>
+        <div class="testimonial">
+          <div class="stars">⭐⭐⭐⭐⭐</div>
+          <p>"Booking felt safer than random Twitter tutors — I could see reviews and my tutor was verified by the school."</p>
+          <div class="testimonial-author">
+            <div class="avatar">BM</div>
+            <div><strong>Bisola M.</strong><span>Economics, FUNAAB</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PRICING ================= -->
+  <section id="pricing" class="why">
+    <div class="container">
+      <div class="center" style="max-width:600px;">
+        <span class="eyebrow">Pricing</span>
+        <h2>Session rates that fit a student budget</h2>
+        <p class="section-sub center">Set by tutors, capped by Aced — so quality tutoring never costs more than it should.</p>
+      </div>
+      <div class="pricing-grid">
+        <div class="price-card">
+          <div class="price-tier">Introductory</div>
+          <div class="price-amount">₦1,000 – ₦2,500</div>
+          <div class="price-desc">Per session · new tutors building reviews</div>
+          <ul class="price-list">
+            <li>✓ Verified 100/200-level tutors</li>
+            <li>✓ 45–60 min sessions</li>
+            <li>✓ WhatsApp reminders</li>
+          </ul>
+          <a href="#" class="btn btn-outline" style="width:100%;">Find a Tutor</a>
+        </div>
+        <div class="price-card featured">
+          <span class="popular-badge">Most Popular</span>
+          <div class="price-tier">Standard</div>
+          <div class="price-amount">₦2,500 – ₦4,000</div>
+          <div class="price-desc">Per session · experienced 300/400-level tutors</div>
+          <ul class="price-list">
+            <li>✓ Top-rated tutors</li>
+            <li>✓ Exam-focused sessions</li>
+            <li>✓ Priority WhatsApp support</li>
+          </ul>
+          <a href="#" class="btn" style="width:100%;background:#fff;color:var(--primary-end);font-weight:700;">Find a Tutor</a>
+        </div>
+        <div class="price-card">
+          <div class="price-tier">Premium</div>
+          <div class="price-amount">₦4,000+</div>
+          <div class="price-desc">Per session · grad students & subject specialists</div>
+          <ul class="price-list">
+            <li>✓ Postgrad-level expertise</li>
+            <li>✓ Project & thesis support</li>
+            <li>✓ Flexible scheduling</li>
+          </ul>
+          <a href="#" class="btn btn-outline" style="width:100%;">Find a Tutor</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-logo" style="display:flex;align-items:center;gap:8px;"><img src="assets/aced-logo.png" alt="Aced logo" class="footer-logo-img">Aced</div>
+          <p>Your Campus. Your Tutor. Your A. Connecting Nigerian university students with verified tutors, one course code at a time.</p>
+          <div class="social-row">
+            <a href="#" aria-label="Instagram">📷</a>
+            <a href="#" aria-label="Twitter">🐦</a>
+            <a href="#" aria-label="TikTok">🎵</a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Product</h4>
+          <a href="#how">Find Tutors</a>
+          <a href="#why">Become a Tutor</a>
+          <a href="#pricing">Pricing</a>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <a href="#trust">About</a>
+          <a href="#">Campuses</a>
+          <a href="#">Contact</a>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <a href="#">Terms of Service</a>
+          <a href="#">Privacy Policy</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 Aced. All rights reserved.</span>
+        <span>Made with ❤️ for Nigerian Students.</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ================= THEME SWITCHER ================= -->
+  <div class="theme-switcher">
+    <div class="theme-panel" id="themePanel">
+      <div class="theme-panel-title">Color theme</div>
+      <div class="theme-option" data-theme-choice="purple" onclick="setTheme('purple', this)">
+        <span class="swatch" style="background:linear-gradient(120deg,#667eea,#764ba2);"></span> Purple Wave
+      </div>
+      <div class="theme-option" data-theme-choice="green" onclick="setTheme('green', this)">
+        <span class="swatch" style="background:linear-gradient(120deg,#059669,#047857);"></span> Campus Green
+      </div>
+      <div class="theme-option active" data-theme-choice="blue" onclick="setTheme('blue', this)">
+        <span class="swatch" style="background:linear-gradient(120deg,#1e40af,#1d4ed8);"></span> Royal Naira ✓
+      </div>
+    </div>
+    <button class="theme-fab" id="themeFab" aria-label="Switch color theme">🎨</button>
+  </div>
+
+  <script>
+    // Navbar solid on scroll
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      navbar.classList.toggle('solid', window.scrollY > 40);
+    });
+
+    // Mobile menu
+    const hamburger = document.getElementById('hamburger');
+    const mobileMenu = document.getElementById('mobileMenu');
+    hamburger.addEventListener('click', () => {
+      mobileMenu.classList.toggle('open');
+    });
+    mobileMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => mobileMenu.classList.remove('open')));
+
+    // Theme switcher
+    const themeFab = document.getElementById('themeFab');
+    const themePanel = document.getElementById('themePanel');
+    themeFab.addEventListener('click', () => {
+      themeFab.classList.toggle('open');
+      themePanel.classList.toggle('open');
+    });
+    function setTheme(name, el){
+      document.body.setAttribute('data-theme', name);
+      document.querySelectorAll('.theme-option').forEach(o => o.classList.remove('active'));
+      el.classList.add('active');
+    }
+
+    // Ripple effect
+    function createRipple(e){
+      const btn = e.currentTarget;
+      const circle = document.createElement('span');
+      const diameter = Math.max(btn.clientWidth, btn.clientHeight);
+      const rect = btn.getBoundingClientRect();
+      circle.style.width = circle.style.height = diameter + 'px';
+      circle.style.left = (e.clientX - rect.left - diameter/2) + 'px';
+      circle.style.top = (e.clientY - rect.top - diameter/2) + 'px';
+      circle.classList.add('ripple');
+      btn.appendChild(circle);
+      setTimeout(() => circle.remove(), 600);
+    }
+    document.querySelectorAll('.btn').forEach(btn => {
+      btn.style.position = btn.style.position || 'relative';
+      btn.addEventListener('click', createRipple);
+    });
+
+    // Count-up stats on scroll into view
+    const statEls = document.querySelectorAll('.stat-num');
+    const countObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const el = entry.target;
+          const target = parseFloat(el.dataset.count);
+          const suffix = el.dataset.suffix || '';
+          const decimals = parseInt(el.dataset.decimal || '0');
+          let current = 0;
+          const duration = 1400;
+          const start = performance.now();
+          function tick(now){
+            const progress = Math.min((now - start) / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            current = target * eased;
+            el.textContent = current.toFixed(decimals) + suffix;
+            if (progress < 1) requestAnimationFrame(tick);
+            else el.textContent = target.toFixed(decimals) + suffix;
+          }
+          requestAnimationFrame(tick);
+          countObserver.unobserve(el);
+        }
+      });
+    }, { threshold: 0.5 });
+    statEls.forEach(el => countObserver.observe(el));
+  </script>
+</body>
+</html>

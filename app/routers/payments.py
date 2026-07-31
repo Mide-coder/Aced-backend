@@ -5,7 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request, Header
 from sqlmodel import Session, select
 
 from app.database import get_session
-from app.models import Booking, BookingStatus
+from app.models import Booking, BookingStatus, User
+from app.auth import get_current_user
 from app.config import settings
 from app.rate_limit import limiter
 
@@ -99,11 +100,13 @@ async def paystack_webhook(
 async def initialize_payment(
     booking_id: int,
     request: Request,
+    current_user: dict = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
     """
     Initialize a Paystack payment for a booking.
     Returns payment URL for the student to complete.
+    Uses the authenticated student's email and the configured FRONTEND_URL.
     """
     booking = session.get(Booking, booking_id)
     if not booking:
@@ -112,10 +115,24 @@ async def initialize_payment(
             detail="Booking not found",
         )
 
+    user_id = int(current_user["sub"])
+    if booking.student_id != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only pay for your own bookings",
+        )
+
     if booking.status != BookingStatus.pending:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot initialize payment for booking in state {booking.status}",
+        )
+
+    student = session.get(User, user_id)
+    if not student:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Student not found",
         )
 
     # Generate unique reference (idempotency key)
@@ -129,10 +146,10 @@ async def initialize_payment(
         "Content-Type": "application/json",
     }
     payload = {
-        "email": "student@example.com",  # Replace with actual student email
+        "email": student.email,
         "amount": int(booking.total_price * 100),  # Convert to kobo
         "reference": reference,
-        "callback_url": "https://your-frontend.com/payment-callback",
+        "callback_url": f"{settings.FRONTEND_URL}/payment-callback.html",
     }
 
     async with httpx.AsyncClient() as client:

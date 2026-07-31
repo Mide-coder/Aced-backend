@@ -116,14 +116,14 @@ def seed_courses():
             added += 1
 
         session.commit()
-        print(f"✅ Seeding complete: {added} courses added, {skipped} already existed.")
+        print(f"[OK] Seeding complete: {added} courses added, {skipped} already existed.")
 
     # Verify the count
     with Session(engine) as session:
         total = session.exec(select(Course)).all()
-        print(f"📊 Total courses in database: {len(total)}")
+        print(f"[OK] Total courses in database: {len(total)}")
 
 
 if __name__ == "__main__":
-    print("🚀 Seeding courses for FUNAAB...")
+    print("[...] Seeding courses for FUNAAB...")
     seed_courses()

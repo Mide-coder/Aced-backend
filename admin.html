@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aced — Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="assets/aced-logo.png">
+  <style>
+    :root {
+      --primary-start: #1e40af;
+      --primary-end: #1d4ed8;
+      --accent: #f97316;
+      --accent-light: #fdba74;
+      --success: #059669;
+      --success-light: #a7f3d0;
+      --error: #dc2626;
+      --error-light: #fca5a5;
+      --warning: #d97706;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --ink: #0f172a;
+      --ink-200: #94a3b8;
+      --ink-300: #64748b;
+      --ink-400: #475569;
+      --radius: 12px;
+      --shadow: 0 1px 3px rgba(0,0,0,.1), 0 1px 2px rgba(0,0,0,.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -4px rgba(0,0,0,.1);
+    }
+    [data-theme="purple"] {
+      --primary-start: #667eea; --primary-end: #764ba2;
+    }
+    [data-theme="green"] {
+      --primary-start: #059669; --primary-end: #047857;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 260px;
+      background: linear-gradient(180deg, var(--primary-start), var(--primary-end));
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 100;
+      transition: transform .3s ease;
+    }
+    .sidebar-logo {
+      padding: 24px 20px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -.03em;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+    }
+    .sidebar-logo span { color: var(--accent); }
+    .sidebar-nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; }
+    .sidebar-link {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px; border-radius: 10px;
+      color: rgba(255,255,255,.7); text-decoration: none;
+      font-size: .9rem; font-weight: 500;
+      transition: all .2s; cursor: pointer; border: none; background: none; width: 100%;
+    }
+    .sidebar-link:hover { background: rgba(255,255,255,.1); color: #fff; }
+    .sidebar-link.active { background: rgba(255,255,255,.2); color: #fff; font-weight: 600; }
+    .sidebar-link .badge {
+      margin-left: auto; background: var(--accent); color: #fff;
+      font-size: .7rem; padding: 2px 8px; border-radius: 999px; font-weight: 600;
+    }
+    .sidebar-footer { padding: 16px 12px; border-top: 1px solid rgba(255,255,255,.1); }
+
+    /* ── Main ── */
+    .main { margin-left: 260px; flex: 1; min-height: 100vh; }
+    .header {
+      background: var(--card-bg); border-bottom: 1px solid #e2e8f0;
+      padding: 16px 32px; display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .header-left { display: flex; align-items: center; gap: 16px; }
+    .menu-toggle { display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--ink); padding: 4px; }
+    .header-title { font-size: 1.25rem; font-weight: 700; }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .header-btn { background: none; border: none; cursor: pointer; font-size: 1.2rem; color: var(--ink-300); position: relative; padding: 4px; }
+    .header-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      font-size: .85rem; font-weight: 700; cursor: pointer;
+    }
+
+    /* ── Content ── */
+    .content { padding: 24px 32px; }
+    .page-section { display: none; }
+    .page-section.active { display: block; animation: fadeIn .3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── Cards ── */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card {
+      background: var(--card-bg); border-radius: var(--radius); padding: 20px;
+      box-shadow: var(--shadow); border: 1px solid #e2e8f0;
+    }
+    .stat-card .stat-label { font-size: .8rem; color: var(--ink-300); font-weight: 500; margin-bottom: 4px; }
+    .stat-card .stat-value { font-size: 1.75rem; font-weight: 800; color: var(--ink); }
+    .stat-card .stat-trend { font-size: .8rem; font-weight: 600; margin-top: 4px; }
+    .stat-card .stat-trend.up { color: var(--success); }
+    .stat-card .stat-trend.down { color: var(--error); }
+
+    /* ── Table ── */
+    .table-wrap {
+      background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow);
+      border: 1px solid #e2e8f0; overflow: hidden;
+    }
+    .table-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; border-bottom: 1px solid #e2e8f0;
+    }
+    .table-header h3 { font-size: 1rem; font-weight: 700; }
+    .table-header .actions { display: flex; gap: 8px; }
+    .table-wrap table { width: 100%; border-collapse: collapse; }
+    .table-wrap th {
+      text-align: left; padding: 12px 20px; font-size: .8rem; font-weight: 600;
+      color: var(--ink-300); text-transform: uppercase; letter-spacing: .05em;
+      background: #f8fafc; border-bottom: 1px solid #e2e8f0;
+    }
+    .table-wrap td { padding: 12px 20px; font-size: .9rem; border-bottom: 1px solid #f1f5f9; }
+    .table-wrap tr:last-child td { border-bottom: none; }
+    .table-wrap tr:hover td { background: #f8fafc; }
+
+    /* ── Status Tags ── */
+    .tag {
+      display: inline-block; padding: 4px 12px; border-radius: 999px;
+      font-size: .75rem; font-weight: 600;
+    }
+    .tag-pending { background: #fef3c7; color: #92400e; }
+    .tag-review { background: #dbeafe; color: #1e40af; }
+    .tag-approved { background: #d1fae5; color: #065f46; }
+    .tag-rejected { background: #fee2e2; color: #991b1b; }
+    .tag-paid { background: #d1fae5; color: #065f46; }
+    .tag-unpaid { background: #fef3c7; color: #92400e; }
+    .tag-verified { background: #d1fae5; color: #065f46; }
+    .tag-unverified { background: #f3f4f6; color: #6b7280; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 20px; border-radius: 10px; font-size: .875rem; font-weight: 600;
+      cursor: pointer; transition: all .2s; border: none; text-decoration: none;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      color: #fff; box-shadow: 0 4px 15px rgba(30,64,175,.3);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(30,64,175,.4); }
+    .btn-outline { background: transparent; border: 2px solid #e2e8f0; color: var(--ink-400); }
+    .btn-outline:hover { border-color: var(--primary-start); color: var(--primary-start); }
+    .btn-sm { padding: 6px 14px; font-size: .8rem; }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-success:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-danger { background: var(--error); color: #fff; }
+    .btn-danger:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-warning { background: var(--warning); color: #fff; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,.5); backdrop-filter: blur(4px);
+      z-index: 200; display: none; align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow-lg);
+      max-width: 520px; width: 90%; max-height: 90vh; overflow-y: auto;
+      animation: modalIn .3s ease;
+    }
+    @keyframes modalIn { from { opacity: 0; transform: scale(.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 24px; border-bottom: 1px solid #e2e8f0;
+    }
+    .modal-header h3 { font-size: 1.1rem; font-weight: 700; }
+    .modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--ink-300); padding: 4px; }
+    .modal-body { padding: 24px; }
+    .modal-footer { padding: 16px 24px; border-top: 1px solid #e2e8f0; display: flex; gap: 8px; justify-content: flex-end; }
+
+    /* ── Form ── */
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: .875rem; font-weight: 600; margin-bottom: 6px; color: var(--ink-400); }
+    .form-group textarea, .form-group select, .form-group input {
+      width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px;
+      font-family: inherit; font-size: .9rem; transition: border .2s; background: #fff;
+    }
+    .form-group textarea:focus, .form-group select:focus, .form-group input:focus {
+      outline: none; border-color: var(--primary-start);
+    }
+    .form-group textarea { min-height: 100px; resize: vertical; }
+
+    /* ── Empty State ── */
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--ink-300); }
+    .empty-state .icon { font-size: 3rem; margin-bottom: 16px; }
+    .empty-state h3 { font-size: 1.1rem; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+    .empty-state p { font-size: .9rem; }
+
+    /* ── Toast ── */
+    .toast-container {
+      position: fixed; bottom: 24px; right: 24px; z-index: 300;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .toast {
+      background: var(--ink); color: #fff; padding: 14px 20px; border-radius: 10px;
+      font-size: .875rem; font-weight: 500; box-shadow: var(--shadow-lg);
+      animation: toastIn .3s ease; max-width: 360px;
+    }
+    .toast.error { background: var(--error); }
+    .toast.success { background: var(--success); }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+    /* ── Responsive ── */
+    @media (max-width: 991px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 99; }
+      .sidebar-overlay.open { display: block; }
+      .main { margin-left: 0; }
+      .menu-toggle { display: block; }
+      .header { padding: 12px 16px; }
+      .content { padding: 16px; }
+    }
+    @media (max-width: 767px) {
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .table-wrap { overflow-x: auto; }
+    }
+    @media (max-width: 480px) {
+      .stats-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><span style="color:var(--accent);">◈</span> Aced <span>Admin</span></div>
+    <nav class="sidebar-nav">
+      <button class="sidebar-link active" onclick="switchPage('overview',this)">📊 Overview</button>
+      <button class="sidebar-link" onclick="switchPage('verification',this)">🪪 Verification <span class="badge" id="verifBadge">3</span></button>
+      <button class="sidebar-link" onclick="switchPage('grades',this)">✅ Grade Verify</button>
+      <button class="sidebar-link" onclick="switchPage('payouts',this)">💰 Payout Ledger</button>
+      <button class="sidebar-link" onclick="switchPage('courses',this)">📚 Courses</button>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="sidebar-link" onclick="window.location.href='index.html'">🏠 Back to Site</button>
+      <button class="sidebar-link" onclick="logoutUser()">🚪 Sign Out</button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <header class="header">
+      <div class="header-left">
+        <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()" aria-label="Toggle menu">☰</button>
+        <h1 class="header-title" id="pageTitle">📊 Overview</h1>
+      </div>
+      <div class="header-right">
+        <span style="font-size:.8rem;color:var(--ink-300);font-weight:500;" id="adminName">Admin</span>
+        <div class="header-avatar" id="adminAvatar">A</div>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- ── Overview ── -->
+      <div class="page-section active" id="pageOverview">
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-label">Total Users</div><div class="stat-value" id="statUsers">—</div></div>
+          <div class="stat-card"><div class="stat-label">Tutors</div><div class="stat-value" id="statTutors">—</div></div>
+          <div class="stat-card"><div class="stat-label">Pending Verification</div><div class="stat-value" id="statPending">—</div></div>
+          <div class="stat-card"><div class="stat-label">Completed Bookings</div><div class="stat-value" id="statBookings">—</div></div>
+        </div>
+        <div class="table-wrap">
+          <div class="table-header"><h3>Recent Activity</h3></div>
+          <table>
+            <thead><tr><th>Action</th><th>Details</th><th>Time</th></tr></thead>
+            <tbody id="activityBody">
+              <tr><td colspan="3" style="text-align:center;color:var(--ink-300);padding:40px;">No recent activity</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── Verification ── -->
+      <div class="page-section" id="pageVerification">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+          <h3 style="font-size:1rem;font-weight:700;">Identity Verification Requests</h3>
+          <div style="display:flex;gap:8px;">
+            <select id="verifFilter" onchange="loadVerificationRequests()" style="padding:8px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:.85rem;">
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="under_review">Under Review</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Email</th><th>University</th><th>Status</th><th>Submitted</th><th>Action</th></tr></thead>
+            <tbody id="verifBody"><tr><td colspan="6" style="text-align:center;color:var(--ink-300);padding:40px;">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── Grade Verification ── -->
+      <div class="page-section" id="pageGrades">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+          <h3 style="font-size:1rem;font-weight:700;">Tutor Grade Verification</h3>
+          <button class="btn btn-outline btn-sm" onclick="loadGradeVerification()">🔄 Refresh</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Tutor</th><th>Rate</th><th>Rating</th><th>Verified A</th><th>Actions</th></tr></thead>
+            <tbody id="gradeBody"><tr><td colspan="5" style="text-align:center;color:var(--ink-300);padding:40px;">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── Payout Ledger ── -->
+      <div class="page-section" id="pagePayouts">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+          <h3 style="font-size:1rem;font-weight:700;">Financial Payout Ledger</h3>
+          <div style="display:flex;gap:8px;">
+            <select id="payoutFilter" onchange="loadPayoutLedger()" style="padding:8px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:.85rem;">
+              <option value="">All</option>
+              <option value="false">Unpaid</option>
+              <option value="true">Paid</option>
+            </select>
+            <button class="btn btn-outline btn-sm" onclick="loadPayoutLedger()">🔄 Refresh</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Booking ID</th><th>Type</th><th>Amount</th><th>Description</th><th>Status</th><th>Date</th><th>Action</th></tr></thead>
+            <tbody id="payoutBody"><tr><td colspan="7" style="text-align:center;color:var(--ink-300);padding:40px;">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── Courses ── -->
+      <div class="page-section" id="pageCourses">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <h3 style="font-size:1rem;font-weight:700;">Course Catalog (FUNAAB)</h3>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Code</th><th>Title</th><th>Department</th><th>Difficulty</th></tr></thead>
+            <tbody id="courseBody"><tr><td colspan="4" style="text-align:center;color:var(--ink-300);padding:40px;">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Review Modal -->
+  <div class="modal-overlay" id="reviewModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Review Verification Request</h3>
+        <button class="modal-close" onclick="closeModal('reviewModal')" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="reviewDetails" style="margin-bottom:16px;padding:12px;background:#f8fafc;border-radius:8px;font-size:.9rem;"></div>
+        <div class="form-group">
+          <label for="reviewStatus">Decision</label>
+          <select id="reviewStatus">
+            <option value="approved">✅ Approve</option>
+            <option value="rejected">❌ Reject</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="reviewNotes">Review Notes (optional)</label>
+          <textarea id="reviewNotes" placeholder="Add notes about this review..."></textarea>
+        </div>
+        <div class="form-group" id="rejectionReasonGroup" style="display:none;">
+          <label for="rejectionReason">Rejection Reason</label>
+          <textarea id="rejectionReason" placeholder="Why was this request rejected?"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('reviewModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitReview()">Submit Review</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="api.js"></script>
+  <script>
+    let currentReviewId = null;
+
+    // ── Auth check ──
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!isAuthenticated()) {
+        window.location.href = 'auth.html';
+        return;
+      }
+      const user = getUser();
+      document.getElementById('adminName').textContent = user.full_name || 'Admin';
+      const initials = (user.full_name || 'A').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+      document.getElementById('adminAvatar').textContent = initials || 'A';
+      loadAllData();
+    });
+
+    // ── Sidebar toggle ──
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+      document.getElementById('sidebarOverlay').classList.toggle('open');
+    }
+
+    // ── Page switching ──
+    function switchPage(page, el) {
+      document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+      document.getElementById(`page${page.charAt(0).toUpperCase()+page.slice(1)}`).classList.add('active');
+      if (el) el.classList.add('active');
+      const titles = { overview: '📊 Overview', verification: '🪪 Verification', grades: '✅ Grade Verify', payouts: '💰 Payout Ledger', courses: '📚 Courses' };
+      document.getElementById('pageTitle').textContent = titles[page] || 'Overview';
+      if (window.innerWidth <= 991) toggleSidebar();
+    }
+
+    // ── Load all data ──
+    async function loadAllData() {
+      try { await loadVerificationRequests(); } catch {}
+      try { await loadGradeVerification(); } catch {}
+      try { await loadPayoutLedger(); } catch {}
+      try { await loadCourses(); } catch {}
+    }
+
+    // ── Verification Requests ──
+    async function loadVerificationRequests() {
+      const filter = document.getElementById('verifFilter').value;
+      const data = await getVerificationRequests(filter || undefined);
+      const tbody = document.getElementById('verifBody');
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--ink-300);padding:40px;">No verification requests found</td></tr>';
+        document.getElementById('statPending').textContent = '0';
+        document.getElementById('verifBadge').textContent = '0';
+        return;
+      }
+      document.getElementById('statPending').textContent = data.filter(r => r.status === 'pending').length;
+      document.getElementById('verifBadge').textContent = data.filter(r => r.status === 'pending').length;
+      tbody.innerHTML = data.map(r => `
+        <tr>
+          <td>#${r.id}</td>
+          <td>${r.detected_email}</td>
+          <td>${r.detected_university || '—'}</td>
+          <td><span class="tag tag-${r.status === 'approved' ? 'approved' : r.status === 'rejected' ? 'rejected' : r.status === 'under_review' ? 'review' : 'pending'}">${r.status.replace('_',' ')}</span></td>
+          <td>${new Date(r.created_at).toLocaleDateString()}</td>
+          <td>
+            ${r.status === 'pending' || r.status === 'under_review' ? `<button class="btn btn-primary btn-sm" onclick="openReview(${r.id})">Review</button>` : '<span style="color:var(--ink-300);font-size:.85rem;">Done</span>'}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function openReview(id) {
+      currentReviewId = id;
+      document.getElementById('reviewDetails').textContent = `Reviewing verification request #${id}`;
+      document.getElementById('reviewStatus').value = 'approved';
+      document.getElementById('reviewNotes').value = '';
+      document.getElementById('rejectionReason').value = '';
+      document.getElementById('rejectionReasonGroup').style.display = 'none';
+      document.getElementById('reviewModal').classList.add('open');
+    }
+
+    document.getElementById('reviewStatus').addEventListener('change', function() {
+      document.getElementById('rejectionReasonGroup').style.display = this.value === 'rejected' ? 'block' : 'none';
+    });
+
+    async function submitReview() {
+      if (!currentReviewId) return;
+      const status = document.getElementById('reviewStatus').value;
+      const data = {
+        status,
+        review_notes: document.getElementById('reviewNotes').value || undefined,
+        rejection_reason: status === 'rejected' ? document.getElementById('rejectionReason').value || 'No reason provided' : undefined,
+      };
+      try {
+        await reviewVerificationRequest(currentReviewId, data);
+        showToast('Review submitted successfully', 'success');
+        closeModal('reviewModal');
+        loadVerificationRequests();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    // ── Grade Verification ──
+    async function loadGradeVerification() {
+      const tutors = await searchTutors();
+      const tbody = document.getElementById('gradeBody');
+      if (!tutors || tutors.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--ink-300);padding:40px;">No tutors found</td></tr>';
+        return;
+      }
+      document.getElementById('statTutors').textContent = tutors.length;
+      document.getElementById('statUsers').textContent = tutors.length + 5; // rough estimate
+      tbody.innerHTML = tutors.map(t => `
+        <tr>
+          <td><strong>${t.user.full_name}</strong><br><span style="font-size:.8rem;color:var(--ink-300);">${t.user.email}</span></td>
+          <td>₦${t.tutor.hourly_rate?.toLocaleString()}</td>
+          <td>⭐ ${t.tutor.average_rating?.toFixed(1) || '0.0'} (${t.tutor.total_reviews || 0})</td>
+          <td>${t.tutor.grade_verified ? '<span class="tag tag-verified">✅ Verified A</span>' : '<span class="tag tag-unverified">Not Verified</span>'}</td>
+          <td>
+            <button class="btn ${t.tutor.grade_verified ? 'btn-warning' : 'btn-success'} btn-sm" onclick="toggleGrade(${t.tutor.id}, ${!t.tutor.grade_verified})">
+              ${t.tutor.grade_verified ? 'Remove Badge' : '✅ Verify A'}
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function toggleGrade(tutorId, newStatus) {
+      try {
+        await toggleGradeVerification(tutorId, { grade_verified: newStatus, notes: 'Manual verification by admin' });
+        showToast(`Grade verification ${newStatus ? 'awarded' : 'removed'}`, 'success');
+        loadGradeVerification();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    // ── Payout Ledger ──
+    async function loadPayoutLedger() {
+      const filter = document.getElementById('payoutFilter').value;
+      const data = await getPayoutLedger(filter !== '' ? filter === 'true' : undefined);
+      const tbody = document.getElementById('payoutBody');
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--ink-300);padding:40px;">No payout entries found</td></tr>';
+        return;
+      }
+      document.getElementById('statBookings').textContent = data.filter(e => e.transaction_type === 'tutor_payout').length;
+      tbody.innerHTML = data.map(e => `
+        <tr>
+          <td>#${e.booking_id}</td>
+          <td><span class="tag">${e.transaction_type.replace(/_/g,' ')}</span></td>
+          <td><strong>₦${Math.abs(e.amount)?.toLocaleString()}</strong></td>
+          <td>${e.description || '—'}</td>
+          <td>${e.tutor_paid ? '<span class="tag tag-paid">✅ Paid</span>' : '<span class="tag tag-unpaid">⏳ Unpaid</span>'}</td>
+          <td>${new Date(e.created_at).toLocaleDateString()}</td>
+          <td>
+            ${!e.tutor_paid ? `<button class="btn btn-success btn-sm" onclick="recordPayout(${e.booking_id})">Record Payment</button>` : '<span style="color:var(--ink-300);font-size:.85rem;">Done</span>'}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // ── Courses ──
+    async function loadCourses() {
+      // Use search without filters to get courses from tutors
+      const tutors = await searchTutors();
+      const allCourses = new Set();
+      tutors.forEach(t => t.courses.forEach(c => allCourses.add(c)));
+      const tbody = document.getElementById('courseBody');
+      if (allCourses.size === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--ink-300);padding:40px;">No courses loaded. Run seed_courses.py first.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = Array.from(allCourses).map(code => `
+        <tr><td><strong>${code}</strong></td><td>—</td><td>—</td><td>—</td></tr>
+      `).join('');
+    }
+
+    // ── Modal ──
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('open');
+      currentReviewId = null;
+    }
+
+    // ── Toast ──
+    function showToast(msg, type = '') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = msg;
+      container.appendChild(toast);
+      setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3500);
+    }
+
+    // Click outside modal to close
+    document.querySelectorAll('.modal-overlay').forEach(el => {
+      el.addEventListener('click', e => { if (e.target === el) closeModal(el.id); });
+    });
+  </script>
+</body>
+</html>

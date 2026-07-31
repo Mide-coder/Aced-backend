@@ -114,24 +114,28 @@ def create_booking(
             detail="Tutor not found or unavailable",
         )
 
-    # Check for double-booking — ensure no overlapping session exists
+    # Check for double-booking — ensure no overlapping session exists.
+    # (Overlap is computed in Python: SQLite can't do column arithmetic in SQL.)
     booking_start = booking_in.session_datetime
     booking_end = booking_start + timedelta(hours=booking_in.duration_hours)
 
-    existing_booking = session.exec(
+    window_start = booking_start - timedelta(hours=24)
+    window_end = booking_end + timedelta(hours=24)
+    candidate_bookings = session.exec(
         select(Booking)
         .where(Booking.tutor_profile_id == booking_in.tutor_profile_id)
-        .where(Booking.session_datetime < booking_end)
-        .where(
-            (Booking.session_datetime + timedelta(hours=Booking.duration_hours)) > booking_start
-        )
+        .where(Booking.session_datetime >= window_start)
+        .where(Booking.session_datetime <= window_end)
         .where(Booking.status.not_in([BookingStatus.cancelled, BookingStatus.refunded]))
-    ).first()
-    if existing_booking:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="This time slot overlaps with an existing booking",
-        )
+    ).all()
+
+    for existing in candidate_bookings:
+        existing_end = existing.session_datetime + timedelta(hours=existing.duration_hours)
+        if existing.session_datetime < booking_end and existing_end > booking_start:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="This time slot overlaps with an existing booking",
+            )
 
     # Calculate total price using tiered pricing based on course difficulty
     hourly_rate = calculate_tiered_price(booking_in.tutor_profile_id, booking_in.course_id, session)
@@ -226,6 +230,54 @@ def get_my_bookings(
         return []
 
     return bookings
+
+
+# ── Get Booking by Paystack Reference (payment callback verification) ──────────
+
+@router.get("/by-reference/{reference}", response_model=BookingRead)
+@limiter.limit("60/minute")
+def get_booking_by_reference(
+    reference: str,
+    request: Request,
+    current_user: dict = Depends(get_current_user),
+    session: Session = Depends(get_session),
+):
+    """
+    Look up a booking by its Paystack reference.
+    Used by the payment callback page to verify real payment status.
+    Students can only look up their own bookings.
+    """
+    booking = session.exec(
+        select(Booking).where(Booking.paystack_reference == reference)
+    ).first()
+    if not booking:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Booking not found for this reference",
+        )
+
+    user_id = int(current_user["sub"])
+    role = current_user.get("role")
+
+    # Students can only view their own bookings
+    if role == "student" and booking.student_id != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only view your own bookings",
+        )
+
+    # Tutors can view bookings for their own profile
+    if role == "tutor":
+        tutor_profile = session.exec(
+            select(TutorProfile).where(TutorProfile.user_id == user_id)
+        ).first()
+        if not tutor_profile or booking.tutor_profile_id != tutor_profile.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can only view bookings for your own sessions",
+            )
+
+    return booking
 
 
 # ── Cancel Booking with Commitment Logic [E004-S03] ───────────────────────────

@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aced — Sign In</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ─── Royal Naira Theme (default) ─── */
+  :root{
+    --primary-start:#1e40af;
+    --primary-end:#1d4ed8;
+    --secondary:#3b82f6;
+    --accent:#f97316;
+    --success:#10b981;
+    --error:#ef4444;
+    --gradient:linear-gradient(120deg,var(--primary-start),var(--primary-end));
+  }
+  [data-theme="blue"]{}
+  [data-theme="purple"]{
+    --primary-start:#667eea;
+    --primary-end:#764ba2;
+    --secondary:#8b5cf6;
+    --accent:#10b981;
+    --gradient:linear-gradient(120deg,var(--primary-start),var(--primary-end));
+  }
+  [data-theme="green"]{
+    --primary-start:#059669;
+    --primary-end:#047857;
+    --secondary:#34d399;
+    --accent:#f59e0b;
+    --gradient:linear-gradient(120deg,var(--primary-start),var(--primary-end));
+  }
+
+  :root{
+    --ink-900:#1f2937;
+    --ink-700:#374151;
+    --ink-600:#4b5563;
+    --ink-400:#9ca3af;
+    --ink-200:#d1d5db;
+    --bg:#ffffff;
+    --bg-soft:#f3f4f6;
+    --bg-warm:#faf9f6;
+    --line:#e5e7eb;
+    --radius:14px;
+    --radius-sm:10px;
+    --shadow-sm:0 1px 3px rgba(31,41,55,0.06), 0 1px 2px rgba(31,41,55,0.04);
+    --shadow-md:0 10px 32px rgba(31,41,55,0.10);
+    --shadow-lg:0 24px 60px rgba(31,41,55,0.16);
+    --ease:cubic-bezier(.4,0,.2,1);
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;height:100%;}
+  body{
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    color:var(--ink-900);
+    background:var(--bg-warm);
+    line-height:1.6;
+    min-height:100%;
+    display:flex;
+    flex-direction:column;
+  }
+  a{text-decoration:none;color:inherit;}
+  button{font-family:inherit;border:none;cursor:pointer;background:none;}
+  input{font-family:inherit;}
+
+  ::selection{background:var(--secondary);color:#fff;}
+  :focus-visible{outline:2px solid var(--primary-end);outline-offset:2px;}
+
+  /* ─── Layout ─── */
+  .auth-wrapper{
+    display:flex;
+    min-height:100vh;
+  }
+
+  /* ─── Left Panel (brand) ─── */
+  .auth-brand{
+    flex:0 0 480px;
+    background:var(--gradient);
+    padding:48px 56px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    position:relative;
+    overflow:hidden;
+  }
+  .auth-brand::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+      radial-gradient(70% 60% at 20% 10%, rgba(255,255,255,0.15), transparent 60%),
+      radial-gradient(50% 50% at 80% 90%, rgba(255,255,255,0.08), transparent 50%);
+    pointer-events:none;
+  }
+  .auth-brand-content{position:relative;z-index:1;}
+  .auth-brand .logo{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;font-size:24px;color:#fff;
+    display:flex;align-items:center;gap:10px;
+    margin-bottom:48px;
+  }
+  .auth-brand .logo-dot{
+    width:10px;height:10px;border-radius:50%;
+    background:rgba(255,255,255,0.7);
+    display:inline-block;
+  }
+  .auth-brand h2{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:32px;font-weight:700;color:#fff;
+    line-height:1.15;margin-bottom:16px;
+  }
+  .auth-brand h2 .accent{color:var(--accent);}
+  .auth-brand p{
+    color:rgba(255,255,255,0.7);
+    font-size:15px;max-width:340px;
+    line-height:1.7;
+  }
+  .auth-brand .testimonial-mini{
+    background:rgba(255,255,255,0.12);
+    backdrop-filter:blur(12px);
+    border-radius:14px;
+    padding:20px 24px;
+    margin-top:40px;
+    border:1px solid rgba(255,255,255,0.15);
+  }
+  .auth-brand .testimonial-mini p{
+    color:rgba(255,255,255,0.9);
+    font-size:14px;max-width:100%;
+    margin-bottom:10px;
+  }
+  .auth-brand .testimonial-mini .author{
+    display:flex;align-items:center;gap:10px;
+    font-size:13px;color:rgba(255,255,255,0.6);
+  }
+  .auth-brand .testimonial-mini .author strong{color:#fff;}
+
+  .auth-brand-footer{
+    position:relative;z-index:1;
+    color:rgba(255,255,255,0.5);
+    font-size:13px;
+  }
+  .auth-brand-footer a{color:rgba(255,255,255,0.8);text-decoration:underline;}
+
+  /* ─── Right Panel (forms) ─── */
+  .auth-main{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:40px 32px;
+  }
+  .auth-card{
+    width:100%;
+    max-width:450px;
+  }
+
+  /* ─── Tab Switcher ─── */
+  .auth-tabs{
+    display:flex;
+    gap:4px;
+    background:var(--bg-soft);
+    border-radius:12px;
+    padding:4px;
+    margin-bottom:32px;
+    border:1px solid var(--line);
+  }
+  .auth-tab{
+    flex:1;
+    padding:10px 16px;
+    border-radius:10px;
+    font-weight:600;
+    font-size:14px;
+    color:var(--ink-400);
+    transition:all 0.3s var(--ease);
+    text-align:center;
+  }
+  .auth-tab:hover{color:var(--ink-600);}
+  .auth-tab.active{
+    background:#fff;
+    color:var(--primary-end);
+    box-shadow:var(--shadow-sm);
+  }
+
+  /* ─── Auth Pages ─── */
+  .auth-page{
+    display:none;
+  }
+  .auth-page.active{
+    display:block;
+    animation:fadeSlideIn 0.4s var(--ease);
+  }
+  @keyframes fadeSlideIn{
+    from{opacity:0;transform:translateY(12px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+
+  .auth-page h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:26px;font-weight:700;
+    margin-bottom:6px;
+  }
+  .auth-page .subtitle{
+    color:var(--ink-400);
+    font-size:14.5px;
+    margin-bottom:28px;
+  }
+
+  /* ─── Role Toggle ─── */
+  .role-toggle{
+    display:flex;
+    gap:12px;
+    margin-bottom:24px;
+  }
+  .role-option{
+    flex:1;
+    padding:16px;
+    border:2px solid var(--line);
+    border-radius:var(--radius-sm);
+    text-align:center;
+    cursor:pointer;
+    transition:all 0.3s var(--ease);
+    position:relative;
+  }
+  .role-option:hover{border-color:var(--ink-200);}
+  .role-option.active{
+    border-color:var(--primary-start);
+    background:color-mix(in srgb, var(--primary-start) 6%, white);
+  }
+  .role-option .icon{font-size:28px;margin-bottom:6px;}
+  .role-option .label{
+    font-weight:700;font-size:14px;display:block;
+  }
+  .role-option .desc{
+    font-size:12px;color:var(--ink-400);margin-top:2px;
+  }
+  .role-option .check{
+    position:absolute;top:8px;right:8px;
+    width:18px;height:18px;border-radius:50%;
+    background:var(--gradient);
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:10px;
+    opacity:0;transform:scale(0.5);
+    transition:all 0.3s var(--ease);
+  }
+  .role-option.active .check{opacity:1;transform:scale(1);}
+
+  /* ─── Form ─── */
+  .form-group{margin-bottom:18px;position:relative;}
+  .form-label{
+    display:block;
+    font-size:13px;font-weight:600;
+    color:var(--ink-700);
+    margin-bottom:6px;
+  }
+  .form-input-wrap{
+    position:relative;
+    display:flex;
+    align-items:center;
+  }
+  .form-input{
+    width:100%;
+    padding:12px 16px;
+    border:2px solid var(--line);
+    border-radius:var(--radius-sm);
+    font-size:15px;
+    color:var(--ink-900);
+    background:#fff;
+    transition:border-color 0.25s var(--ease), box-shadow 0.25s var(--ease);
+  }
+  .form-input:focus{
+    border-color:var(--primary-start);
+    box-shadow:0 0 0 4px color-mix(in srgb, var(--primary-start) 15%, transparent);
+    outline:none;
+  }
+  .form-input.error{border-color:var(--error);}
+  .form-input.error:focus{
+    box-shadow:0 0 0 4px rgba(239,68,68,0.15);
+  }
+  .form-input.success{border-color:var(--success);}
+
+  .input-icon{
+    position:absolute;
+    left:14px;
+    color:var(--ink-400);
+    font-size:16px;
+    pointer-events:none;
+  }
+  .input-icon + .form-input{padding-left:44px;}
+
+  .pw-toggle{
+    position:absolute;
+    right:12px;
+    background:none;
+    border:none;
+    color:var(--ink-400);
+    font-size:16px;
+    cursor:pointer;
+    padding:4px;
+    transition:color 0.2s var(--ease);
+  }
+  .pw-toggle:hover{color:var(--ink-600);}
+
+  .form-error{
+    font-size:12.5px;
+    color:var(--error);
+    margin-top:4px;
+    display:none;
+    align-items:center;
+    gap:4px;
+  }
+  .form-error.show{display:flex;}
+
+  .form-hint{
+    font-size:12.5px;
+    color:var(--ink-400);
+    margin-top:4px;
+  }
+
+  /* ─── University badge ─── */
+  .uni-badge{
+    display:none;
+    align-items:center;
+    gap:6px;
+    padding:5px 10px;
+    border-radius:8px;
+    font-size:12px;
+    font-weight:600;
+    margin-top:6px;
+    background:color-mix(in srgb, var(--success) 12%, white);
+    color:var(--success);
+  }
+  .uni-badge.show{display:inline-flex;}
+
+  /* ─── Password Strength ─── */
+  .pw-strength{
+    display:flex;
+    gap:4px;
+    margin-top:8px;
+  }
+  .pw-strength-bar{
+    flex:1;height:3px;
+    border-radius:3px;
+    background:var(--line);
+    transition:background 0.3s var(--ease);
+  }
+  .pw-strength-bar.fill-1{background:var(--error);}
+  .pw-strength-bar.fill-2{background:var(--accent);}
+  .pw-strength-bar.fill-3{background:var(--accent);}
+  .pw-strength-bar.fill-4{background:var(--success);}
+  .pw-strength-text{
+    font-size:11.5px;
+    font-weight:600;
+    margin-top:4px;
+    display:none;
+  }
+  .pw-strength-text.show{display:block;}
+
+  /* ─── Checkbox ─── */
+  .checkbox-wrap{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:18px;
+    cursor:pointer;
+  }
+  .checkbox-wrap input[type="checkbox"]{
+    width:18px;height:18px;
+    accent-color:var(--primary-start);
+    border-radius:4px;
+    cursor:pointer;
+  }
+  .checkbox-wrap label{
+    font-size:13.5px;
+    color:var(--ink-600);
+    cursor:pointer;
+    user-select:none;
+  }
+  .checkbox-wrap label a{color:var(--primary-end);font-weight:600;text-decoration:underline;}
+
+  /* ─── Buttons ─── */
+  .btn{
+    position:relative;overflow:hidden;
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    width:100%;
+    padding:14px 24px;
+    border-radius:var(--radius-sm);
+    font-weight:700;font-size:15px;
+    transition:transform 0.3s var(--ease), box-shadow 0.3s var(--ease), background 0.3s var(--ease);
+  }
+  .btn:hover{transform:translateY(-1px);}
+  .btn:active{transform:translateY(0);}
+  .btn-primary{
+    background:var(--gradient);color:#fff;
+    box-shadow:0 8px 20px -6px color-mix(in srgb, var(--primary-end) 55%, transparent);
+  }
+  .btn-primary:hover{box-shadow:0 12px 28px -6px color-mix(in srgb, var(--primary-end) 65%, transparent);}
+  .btn-primary:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+  .btn-outline{
+    background:transparent;color:var(--ink-700);
+    border:2px solid var(--line);
+  }
+  .btn-outline:hover{border-color:var(--primary-start);color:var(--primary-end);}
+
+  .btn .spinner{
+    width:18px;height:18px;
+    border:2px solid rgba(255,255,255,0.3);
+    border-top-color:#fff;
+    border-radius:50%;
+    animation:spin 0.7s linear infinite;
+    display:none;
+  }
+  .btn.loading .spinner{display:block;}
+  .btn.loading .btn-text{display:none;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .divider{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    margin:22px 0;
+    color:var(--ink-400);
+    font-size:12px;
+    font-weight:500;
+  }
+  .divider::before,.divider::after{
+    content:"";
+    flex:1;
+    height:1px;
+    background:var(--line);
+  }
+
+  .social-btns{
+    display:flex;
+    gap:12px;
+  }
+  .social-btn{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:11px;
+    border-radius:var(--radius-sm);
+    border:2px solid var(--line);
+    font-size:14px;
+    font-weight:600;
+    color:var(--ink-700);
+    transition:all 0.25s var(--ease);
+    background:#fff;
+  }
+  .social-btn:hover{border-color:var(--ink-200);background:var(--bg-soft);}
+
+  .auth-switch{
+    text-align:center;
+    margin-top:22px;
+    font-size:14px;
+    color:var(--ink-400);
+  }
+  .auth-switch a{
+    color:var(--primary-end);
+    font-weight:700;
+    text-decoration:underline;
+    cursor:pointer;
+  }
+
+  /* ─── Success state (forgot password) ─── */
+  .success-state{
+    text-align:center;
+    padding:32px 0;
+    display:none;
+  }
+  .success-state.show{display:block;}
+  .success-state .icon{
+    width:56px;height:56px;
+    border-radius:50%;
+    background:color-mix(in srgb, var(--success) 15%, white);
+    display:flex;align-items:center;justify-content:center;
+    margin:0 auto 16px;
+    font-size:26px;
+  }
+  .success-state h3{font-size:20px;margin-bottom:8px;}
+  .success-state p{color:var(--ink-400);font-size:14px;max-width:320px;margin:0 auto 24px;}
+
+  /* ─── Theme Switcher ─── */
+  .theme-switcher{
+    position:fixed;bottom:20px;right:20px;z-index:1300;
+    display:flex;flex-direction:column;align-items:flex-end;gap:10px;
+  }
+  .theme-fab{
+    width:44px;height:44px;border-radius:50%;
+    background:var(--gradient);
+    box-shadow:var(--shadow-md);
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;color:#fff;
+    transition:transform 0.4s var(--ease);
+  }
+  .theme-fab.open{transform:rotate(135deg);}
+  .theme-panel{
+    background:#fff;border-radius:14px;box-shadow:var(--shadow-lg);
+    padding:12px;border:1px solid var(--line);width:190px;
+    display:flex;flex-direction:column;gap:6px;
+    transform:translateY(10px) scale(0.96);opacity:0;pointer-events:none;
+    transition:transform 0.3s var(--ease), opacity 0.3s var(--ease);
+  }
+  .theme-panel.open{transform:translateY(0) scale(1);opacity:1;pointer-events:auto;}
+  .theme-panel-title{
+    font-size:11px;font-weight:700;text-transform:uppercase;
+    color:var(--ink-400);letter-spacing:0.06em;padding:2px 4px 6px;
+  }
+  .theme-option{
+    display:flex;align-items:center;gap:8px;
+    padding:8px 8px;border-radius:8px;
+    font-size:13px;font-weight:600;
+    transition:background 0.2s var(--ease);
+  }
+  .theme-option:hover{background:var(--bg-soft);}
+  .theme-option.active{background:var(--bg-soft);}
+  .swatch{width:16px;height:16px;border-radius:5px;flex-shrink:0;}
+  .theme-option.active::after{
+    content:"✓";margin-left:auto;color:var(--primary-end);font-weight:700;
+  }
+
+  /* ─── Ripple ─── */
+  .ripple{
+    position:absolute;border-radius:50%;
+    background:rgba(255,255,255,0.5);
+    transform:scale(0);
+    animation:rippleAnim 0.6s var(--ease);
+    pointer-events:none;
+  }
+  @keyframes rippleAnim{to{transform:scale(3);opacity:0;}}
+
+  /* ─── Responsive ─── */
+  @media (max-width:1024px){
+    .auth-brand{flex:0 0 340px;padding:32px;}
+  }
+  @media (max-width:768px){
+    .auth-wrapper{flex-direction:column;}
+    .auth-brand{
+      flex:none;
+      padding:28px 24px 32px;
+      min-height:auto;
+    }
+    .auth-brand .logo{margin-bottom:20px;}
+    .auth-brand h2{font-size:22px;}
+    .auth-brand .testimonial-mini{display:none;}
+    .auth-brand-footer{display:none;}
+    .auth-main{padding:24px 16px;}
+    .auth-card{max-width:100%;}
+    .role-toggle{flex-direction:row;}
+  }
+  @media (max-width:480px){
+    .auth-tab{font-size:13px;padding:8px 12px;}
+    .role-toggle{gap:8px;}
+    .role-option{padding:12px 8px;}
+    .role-option .icon{font-size:22px;}
+    .role-option .desc{display:none;}
+    .social-btns{flex-direction:column;}
+    .auth-brand{padding:20px 16px 24px;}
+    .auth-brand h2{font-size:20px;}
+    .auth-brand p{font-size:13px;}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:0.001ms !important;animation-iteration-count:1 !important;transition-duration:0.001ms !important;}
+  }
+</style>
+</head>
+<body data-theme="blue">
+
+<div class="auth-wrapper">
+
+  <!-- ═══ LEFT BRAND PANEL ═══ -->
+  <div class="auth-brand">
+    <div class="auth-brand-content">
+      <div class="logo"><span class="logo-dot"></span> Aced</div>
+      <h2>Your next <span class="accent">A</span><br>starts here.</h2>
+      <p>Join thousands of Nigerian university students acing their courses with verified tutors from their own campus.</p>
+      <div class="testimonial-mini">
+        <p>"Finally understood hypothesis testing in 40 minutes. Best decision this semester."</p>
+        <div class="author">
+          <span>⭐</span>
+          <strong>Tomi F.</strong>
+          <span>FUNAAB · Statistics II</span>
+        </div>
+      </div>
+    </div>
+    <div class="auth-brand-footer">
+      <a href="landing.html">← Back to home</a>
+    </div>
+  </div>
+
+  <!-- ═══ RIGHT FORM PANEL ═══ -->
+  <div class="auth-main">
+    <div class="auth-card">
+
+      <!-- Tab Switcher -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-tab="login" onclick="switchTab('login')">Sign In</button>
+        <button class="auth-tab" data-tab="register" onclick="switchTab('register')">Register</button>
+        <button class="auth-tab" data-tab="forgot" onclick="switchTab('forgot')">Reset</button>
+      </div>
+
+      <!-- ═══ LOGIN PAGE ═══ -->
+      <div class="auth-page active" id="page-login">
+        <h1>Welcome back</h1>
+        <p class="subtitle">Sign in to access your dashboard and bookings.</p>
+
+        <form id="loginForm" novalidate>
+          <div class="form-group">
+            <label class="form-label" for="loginEmail">Email Address</label>
+            <div class="form-input-wrap">
+              <span class="input-icon">📧</span>
+              <input
+                class="form-input"
+                type="email"
+                id="loginEmail"
+                placeholder="you@university.edu.ng"
+                required
+                autocomplete="email"
+              >
+            </div>
+            <div class="uni-badge" id="loginUniBadge">🎓</div>
+            <div class="form-error" id="loginEmailError">Please enter a valid email address.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="loginPassword">Password</label>
+            <div class="form-input-wrap">
+              <input
+                class="form-input"
+                type="password"
+                id="loginPassword"
+                placeholder="Enter your password"
+                required
+                autocomplete="current-password"
+              >
+              <button class="pw-toggle" type="button" onclick="togglePW('loginPassword', this)" aria-label="Toggle password visibility">👁️</button>
+            </div>
+            <div class="form-error" id="loginPasswordError">Password is required.</div>
+          </div>
+
+          <div class="checkbox-wrap">
+            <input type="checkbox" id="rememberMe">
+            <label for="rememberMe">Remember me</label>
+          </div>
+
+          <button class="btn btn-primary" type="submit" id="loginBtn">
+            <span class="spinner"></span>
+            <span class="btn-text">Sign In</span>
+          </button>
+        </form>
+
+        <div class="divider">or continue with</div>
+        <div class="social-btns">
+          <button class="social-btn" onclick="createRipple(event)">🔵 Google</button>
+          <button class="social-btn" onclick="createRipple(event)">⚫ GitHub</button>
+        </div>
+
+        <p class="auth-switch">
+          Don't have an account?
+          <a onclick="switchTab('register')">Register here</a>
+        </p>
+      </div>
+
+      <!-- ═══ REGISTER PAGE ═══ -->
+      <div class="auth-page" id="page-register">
+        <h1>Create your account</h1>
+        <p class="subtitle">Choose your role and start your journey.</p>
+
+        <form id="registerForm" novalidate>
+          <!-- Role Toggle -->
+          <div class="role-toggle">
+            <div class="role-option active" data-role="student" onclick="selectRole(this)">
+              <span class="check">✓</span>
+              <div class="icon">🎓</div>
+              <span class="label">Student</span>
+              <span class="desc">I need tutoring</span>
+            </div>
+            <div class="role-option" data-role="tutor" onclick="selectRole(this)">
+              <span class="check">✓</span>
+              <div class="icon">📚</div>
+              <span class="label">Tutor</span>
+              <span class="desc">I want to teach</span>
+            </div>
+          </div>
+          <input type="hidden" id="regRole" value="student">
+
+          <div class="form-group">
+            <label class="form-label" for="regName">Full Name</label>
+            <div class="form-input-wrap">
+              <span class="input-icon">👤</span>
+              <input class="form-input" type="text" id="regName" placeholder="e.g. Chidera Okonkwo" required autocomplete="name">
+            </div>
+            <div class="form-error" id="regNameError">Please enter your full name.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="regEmail">School Email Address</label>
+            <div class="form-input-wrap">
+              <span class="input-icon">📧</span>
+              <input
+                class="form-input"
+                type="email"
+                id="regEmail"
+                placeholder="you@funaab.edu.ng"
+                required
+                autocomplete="email"
+              >
+            </div>
+            <div class="uni-badge" id="regUniBadge">🎓</div>
+            <div class="form-error" id="regEmailError">Please enter a valid school email.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="regPhone">Phone Number</label>
+            <div class="form-input-wrap">
+              <span class="input-icon">📱</span>
+              <input class="form-input" type="tel" id="regPhone" placeholder="e.g. 0803 123 4567" autocomplete="tel">
+            </div>
+            <div class="form-hint">Nigerian number — used for WhatsApp reminders.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="regPassword">Password</label>
+            <div class="form-input-wrap">
+              <input
+                class="form-input"
+                type="password"
+                id="regPassword"
+                placeholder="Create a strong password"
+                required
+                autocomplete="new-password"
+              >
+              <button class="pw-toggle" type="button" onclick="togglePW('regPassword', this)" aria-label="Toggle password visibility">👁️</button>
+            </div>
+            <div class="pw-strength" id="pwStrength">
+              <div class="pw-strength-bar" data-idx="0"></div>
+              <div class="pw-strength-bar" data-idx="1"></div>
+              <div class="pw-strength-bar" data-idx="2"></div>
+              <div class="pw-strength-bar" data-idx="3"></div>
+            </div>
+            <div class="pw-strength-text" id="pwStrengthText">Weak</div>
+            <div class="form-error" id="regPasswordError">Password must be at least 8 characters.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="regConfirm">Confirm Password</label>
+            <div class="form-input-wrap">
+              <input
+                class="form-input"
+                type="password"
+                id="regConfirm"
+                placeholder="Repeat your password"
+                required
+                autocomplete="new-password"
+              >
+              <button class="pw-toggle" type="button" onclick="togglePW('regConfirm', this)" aria-label="Toggle password visibility">👁️</button>
+            </div>
+            <div class="form-error" id="regConfirmError">Passwords do not match.</div>
+          </div>
+
+          <div class="checkbox-wrap">
+            <input type="checkbox" id="agreeTerms">
+            <label for="agreeTerms">I agree to the <a href="#">Terms of Service</a> &amp; <a href="#">Privacy Policy</a></label>
+          </div>
+          <div class="form-error" id="regTermsError">You must agree to the terms to continue.</div>
+
+          <button class="btn btn-primary" type="submit" id="registerBtn">
+            <span class="spinner"></span>
+            <span class="btn-text">Create Account</span>
+          </button>
+        </form>
+
+        <div class="divider">or continue with</div>
+        <div class="social-btns">
+          <button class="social-btn" onclick="createRipple(event)">🔵 Google</button>
+          <button class="social-btn" onclick="createRipple(event)">⚫ GitHub</button>
+        </div>
+
+        <p class="auth-switch">
+          Already have an account?
+          <a onclick="switchTab('login')">Sign in</a>
+        </p>
+      </div>
+
+      <!-- ═══ FORGOT PASSWORD PAGE ═══ -->
+      <div class="auth-page" id="page-forgot">
+        <h1>Reset your password</h1>
+        <p class="subtitle">Enter your email and we'll send you a reset link.</p>
+
+        <form id="forgotForm" novalidate>
+          <div class="form-group">
+            <label class="form-label" for="forgotEmail">Email Address</label>
+            <div class="form-input-wrap">
+              <span class="input-icon">📧</span>
+              <input
+                class="form-input"
+                type="email"
+                id="forgotEmail"
+                placeholder="you@university.edu.ng"
+                required
+                autocomplete="email"
+              >
+            </div>
+            <div class="form-error" id="forgotEmailError">Please enter a valid email.</div>
+          </div>
+
+          <button class="btn btn-primary" type="submit" id="forgotBtn">
+            <span class="spinner"></span>
+            <span class="btn-text">Send Reset Link</span>
+          </button>
+        </form>
+
+        <!-- Success state -->
+        <div class="success-state" id="forgotSuccess">
+          <div class="icon">✉️</div>
+          <h3>Check your inbox</h3>
+          <p>If an account exists for that email, we've sent a password reset link. It should arrive in a few minutes.</p>
+          <button class="btn btn-outline" onclick="switchTab('login')" style="width:auto;display:inline-flex;">Back to Sign In</button>
+        </div>
+
+        <p class="auth-switch" id="forgotSwitch">
+          Remember your password?
+          <a onclick="switchTab('login')">Sign in</a>
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══ THEME SWITCHER ═══ -->
+<div class="theme-switcher">
+  <div class="theme-panel" id="themePanel">
+    <div class="theme-panel-title">Color theme</div>
+    <div class="theme-option" data-theme-choice="purple" onclick="setTheme('purple', this)">
+      <span class="swatch" style="background:linear-gradient(120deg,#667eea,#764ba2);"></span> Purple Wave
+    </div>
+    <div class="theme-option" data-theme-choice="green" onclick="setTheme('green', this)">
+      <span class="swatch" style="background:linear-gradient(120deg,#059669,#047857);"></span> Campus Green
+    </div>
+    <div class="theme-option active" data-theme-choice="blue" onclick="setTheme('blue', this)">
+      <span class="swatch" style="background:linear-gradient(120deg,#1e40af,#1d4ed8);"></span> Royal Naira
+    </div>
+  </div>
+  <button class="theme-fab" id="themeFab" aria-label="Switch color theme">🎨</button>
+</div>
+
+<script>
+  /* ══════════════════════════════════════════════
+     UNIVERSITY DOMAIN DETECTION
+     ══════════════════════════════════════════════ */
+  const UNIVERSITIES = {
+    'funaab.edu.ng':          'FUNAAB',
+    'ui.edu.ng':              'University of Ibadan',
+    'unilag.edu.ng':          'UNILAG',
+    'oauife.edu.ng':          'OAU',
+    'uniben.edu.ng':          'UNIBEN',
+    'unizik.edu.ng':          'UNIZIK',
+    'unn.edu.ng':             'University of Nigeria, Nsukka',
+    'abu.edu.ng':             'ABU Zaria',
+    'lasu.edu.ng':            'LASU',
+    'unical.edu.ng':          'UNICAL',
+    'unilorin.edu.ng':        'Unilorin',
+    'aauekpoma.edu.ng':       'AAU Ekpoma',
+    'atbu.edu.ng':            'ATBU Bauchi',
+    'babcock.edu.ng':         'Babcock University',
+    'covenantuniversity.edu.ng': 'Covenant University',
+    'delsu.edu.ng':           'DELSU',
+    'eksu.edu.ng':            'EKSU',
+    'futo.edu.ng':            'FUTO',
+    'imsu.edu.ng':            'IMSU',
+    'noun.edu.ng':            'NOUN',
+    'run.edu.ng':             'Redeemer\'s University',
+    'tasu.edu.ng':            'TASU',
+    'yabatech.edu.ng':        'Yabatech',
+    'mouau.edu.ng':           'MOUAU',
+  };
+
+  function detectUniversity(email, badgeId) {
+    const badge = document.getElementById(badgeId);
+    const match = email.match(/@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$/);
+    if (match) {
+      const domain = match[1].toLowerCase();
+      const uni = UNIVERSITIES[domain];
+      if (uni) {
+        badge.textContent = `🎓 ${uni} student detected`;
+        badge.className = 'uni-badge show';
+        return uni;
+      }
+      // Known university-like domain but not in our list
+      if (domain.includes('.edu.ng') || domain.includes('ac.ng') || domain.includes('university')) {
+        badge.textContent = `🎓 Campus email detected — we'll verify your university`;
+        badge.className = 'uni-badge show';
+        return null;
+      }
+    }
+    badge.className = 'uni-badge';
+    return null;
+  }
+
+  /* ══════════════════════════════════════════════
+     TAB SWITCHING
+     ══════════════════════════════════════════════ */
+  function switchTab(name) {
+    // Update tabs
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector(`.auth-tab[data-tab="${name}"]`).classList.add('active');
+    // Update pages
+    document.querySelectorAll('.auth-page').forEach(p => p.classList.remove('active'));
+    document.getElementById(`page-${name}`).classList.add('active');
+    // Reset success states
+    document.getElementById('forgotSuccess').classList.remove('show');
+    document.getElementById('forgotSwitch').style.display = '';
+    document.getElementById('forgotForm').style.display = '';
+    // Clear errors
+    document.querySelectorAll('.form-error').forEach(e => e.classList.remove('show'));
+    document.querySelectorAll('.form-input').forEach(i => i.classList.remove('error', 'success'));
+  }
+
+  /* ══════════════════════════════════════════════
+     ROLE SELECTION
+     ══════════════════════════════════════════════ */
+  function selectRole(el) {
+    document.querySelectorAll('.role-option').forEach(r => r.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('regRole').value = el.dataset.role;
+  }
+
+  /* ══════════════════════════════════════════════
+     PASSWORD VISIBILITY TOGGLE
+     ══════════════════════════════════════════════ */
+  function togglePW(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (input.type === 'password') {
+    
+      input.type = 'text';
+      btn.textContent = '🙈';
+    } else {
+      input.type = 'password';
+      btn.textContent = '👁️';
+    }
+  }
+
+  /* ══════════════════════════════════════════════
+     PASSWORD STRENGTH METER
+     ══════════════════════════════════════════════ */
+  const pwInput = document.getElementById('regPassword');
+  if (pwInput) {
+    pwInput.addEventListener('input', function() {
+      const val = this.value;
+      let score = 0;
+      if (val.length >= 8) score++;
+      if (val.length >= 12) score++;
+      if (/[A-Z]/.test(val)) score++;
+      if (/\d/.test(val)) score++;
+      if (/[^A-Za-z0-9]/.test(val)) score++;
+
+      const bars = document.querySelectorAll('.pw-strength-bar');
+      const text = document.getElementById('pwStrengthText');
+      const labels = ['', 'Weak', 'Fair', 'Good', 'Strong'];
+      const colors = ['', 'var(--error)', 'var(--accent)', 'var(--accent)', 'var(--success)'];
+
+      bars.forEach((bar, i) => {
+        bar.className = 'pw-strength-bar';
+        if (i < score) bar.classList.add(`fill-${Math.min(score, 4)}`);
+      });
+
+      if (val.length > 0) {
+        text.className = 'pw-strength-text show';
+        text.textContent = labels[score] || '';
+        text.style.color = colors[score] || 'var(--ink-400)';
+      } else {
+        text.className = 'pw-strength-text';
+      }
+    });
+  }
+
+  /* ══════════════════════════════════════════════
+     UNIVERSITY AUTO-DETECT (real-time)
+     ══════════════════════════════════════════════ */
+  document.getElementById('loginEmail')?.addEventListener('input', function() {
+    detectUniversity(this.value, 'loginUniBadge');
+  });
+  document.getElementById('regEmail')?.addEventListener('input', function() {
+    detectUniversity(this.value, 'regUniBadge');
+  });
+
+  /* ══════════════════════════════════════════════
+     VALIDATION HELPERS
+     ══════════════════════════════════════════════ */
+  function showError(inputId, errorId) {
+    const input = document.getElementById(inputId);
+    const error = document.getElementById(errorId);
+    if (input) input.classList.add('error');
+    if (error) error.classList.add('show');
+  }
+  function clearError(inputId, errorId) {
+    const input = document.getElementById(inputId);
+    const error = document.getElementById(errorId);
+    if (input) input.classList.remove('error');
+    if (error) error.classList.remove('show');
+  }
+  function validateEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  /* ══════════════════════════════════════════════
+     LOGIN FORM
+     ══════════════════════════════════════════════ */
+  document.getElementById('loginForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    let valid = true;
+
+    clearError('loginEmail', 'loginEmailError');
+    clearError('loginPassword', 'loginPasswordError');
+
+    if (!validateEmail(email)) { showError('loginEmail', 'loginEmailError'); valid = false; }
+    if (!password) { showError('loginPassword', 'loginPasswordError'); valid = false; }
+
+    if (valid) {
+      const btn = document.getElementById('loginBtn');
+      btn.classList.add('loading');
+      btn.disabled = true;
+      setTimeout(() => {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+        alert('Login successful! (Demo — backend integration pending)');
+      }, 1800);
+    }
+  });
+
+  /* ══════════════════════════════════════════════
+     REGISTER FORM
+     ══════════════════════════════════════════════ */
+  document.getElementById('registerForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const name = document.getElementById('regName').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const phone = document.getElementById('regPhone').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const confirm = document.getElementById('regConfirm').value;
+    const agreed = document.getElementById('agreeTerms').checked;
+    let valid = true;
+
+    ['regName','regEmail','regPassword','regConfirm'].forEach(id => clearError(id, id + 'Error'));
+
+    if (!name || name.length < 2) { showError('regName', 'regNameError'); valid = false; }
+    if (!validateEmail(email)) { showError('regEmail', 'regEmailError'); valid = false; }
+    if (!password || password.length < 8) { showError('regPassword', 'regPasswordError'); valid = false; }
+    if (password !== confirm) { showError('regConfirm', 'regConfirmError'); valid = false; }
+    if (!agreed) {
+      document.getElementById('regTermsError').classList.add('show');
+      valid = false;
+    } else {
+      document.getElementById('regTermsError').classList.remove('show');
+    }
+
+    if (valid) {
+      const btn = document.getElementById('registerBtn');
+      btn.classList.add('loading');
+      btn.disabled = true;
+      setTimeout(() => {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+        alert('Registration successful! (Demo — backend integration pending)');
+      }, 1800);
+    }
+  });
+
+  /* ══════════════════════════════════════════════
+     FORGOT PASSWORD FORM
+     ══════════════════════════════════════════════ */
+  document.getElementById('forgotForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const email = document.getElementById('forgotEmail').value.trim();
+    clearError('forgotEmail', 'forgotEmailError');
+
+    if (!validateEmail(email)) { showError('forgotEmail', 'forgotEmailError'); return; }
+
+    const btn = document.getElementById('forgotBtn');
+    btn.classList.add('loading');
+    btn.disabled = true;
+    setTimeout(() => {
+      btn.classList.remove('loading');
+      btn.disabled = false;
+      this.style.display = 'none';
+      document.getElementById('forgotSuccess').classList.add('show');
+      document.getElementById('forgotSwitch').style.display = 'none';
+    }, 1800);
+  });
+
+  /* ══════════════════════════════════════════════
+     REAL-TIME VALIDATION CLEAR ON INPUT
+     ══════════════════════════════════════════════ */
+  document.querySelectorAll('.form-input').forEach(input => {
+    input.addEventListener('input', function() {
+      this.classList.remove('error');
+      const parent = this.closest('.form-group');
+      if (parent) {
+        const error = parent.querySelector('.form-error');
+        if (error) error.classList.remove('show');
+      }
+    });
+  });
+
+  /* ══════════════════════════════════════════════
+     THEME SWITCHER
+     ══════════════════════════════════════════════ */
+  const themeFab = document.getElementById('themeFab');
+  const themePanel = document.getElementById('themePanel');
+  themeFab.addEventListener('click', () => {
+    themeFab.classList.toggle('open');
+    themePanel.classList.toggle('open');
+  });
+  function setTheme(name, el) {
+    document.body.setAttribute('data-theme', name);
+    document.querySelectorAll('.theme-option').forEach(o => o.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  /* ══════════════════════════════════════════════
+     RIPPLE EFFECT
+     ══════════════════════════════════════════════ */
+  function createRipple(e) {
+    const btn = e.currentTarget;
+    const circle = document.createElement('span');
+    const diameter = Math.max(btn.clientWidth, btn.clientHeight);
+    const rect = btn.getBoundingClientRect();
+    circle.style.width = circle.style.height = diameter + 'px';
+    circle.style.left = (e.clientX - rect.left - diameter/2) + 'px';
+    circle.style.top = (e.clientY - rect.top - diameter/2) + 'px';
+    circle.classList.add('ripple');
+    btn.appendChild(circle);
+    setTimeout(() => circle.remove(), 600);
+  }
+  document.querySelectorAll('.btn, .social-btn').forEach(btn => {
+    btn.style.position = btn.style.position || 'relative';
+    btn.addEventListener('click', createRipple);
+  });
+
+  /* ══════════════════════════════════════════════
+     CLOSE THEME PANEL ON CLICK OUTSIDE
+     ══════════════════════════════════════════════ */
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.theme-switcher')) {
+      themePanel.classList.remove('open');
+      themeFab.classList.remove('open');
+    }
+  });
+</script>
+
+</body>
+</html>

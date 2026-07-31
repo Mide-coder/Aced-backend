@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aced — Payment Status</title>
+<link rel="icon" type="image/png" href="assets/aced-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-start: #1e40af;
+      --primary-end: #1d4ed8;
+      --accent: #f97316;
+      --success: #059669;
+      --error: #dc2626;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --ink: #0f172a;
+      --ink-300: #64748b;
+      --radius: 16px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, var(--bg) 0%, #e2e8f0 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: 0 20px 60px rgba(0,0,0,.12);
+      max-width: 480px;
+      width: 100%;
+      padding: 40px;
+      text-align: center;
+      animation: fadeUp .5s ease;
+    }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    .icon { font-size: 4rem; margin-bottom: 16px; }
+    .icon.spin { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    h1 { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; margin-bottom: 8px; }
+    p { color: var(--ink-300); margin-bottom: 24px; line-height: 1.6; }
+    .details {
+      background: #f8fafc; border-radius: 12px; padding: 16px;
+      margin-bottom: 24px; text-align: left;
+    }
+    .details .row { display: flex; justify-content: space-between; padding: 8px 0; font-size: .9rem; }
+    .details .row:not(:last-child) { border-bottom: 1px solid #e2e8f0; }
+    .details .label { color: var(--ink-300); }
+    .details .value { font-weight: 600; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 28px; border-radius: 12px; font-size: .95rem; font-weight: 600;
+      cursor: pointer; transition: all .2s; border: none; text-decoration: none;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+      color: #fff; box-shadow: 0 4px 15px rgba(30,64,175,.3);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(30,64,175,.4); }
+    .btn-outline { background: transparent; border: 2px solid #e2e8f0; color: var(--ink-300); }
+    .btn-outline:hover { border-color: var(--primary-start); color: var(--primary-start); }
+
+    .success { color: var(--success); }
+    .error { color: var(--error); }
+  </style>
+</head>
+<body>
+  <div class="card" id="statusCard">
+    <!-- State: loading -->
+    <div id="loadingState">
+      <div class="icon spin">⏳</div>
+      <h1>Confirming Payment...</h1>
+      <p>Please wait while we verify your payment with Paystack.</p>
+    </div>
+
+    <!-- State: success -->
+    <div id="successState" style="display:none;">
+      <div class="icon success">✅</div>
+      <h1>Payment Successful! 🎉</h1>
+      <p>Your session has been booked and the tutor will be notified.</p>
+      <div class="details" id="successDetails">
+        <div class="row"><span class="label">Booking ID</span><span class="value" id="bookId">—</span></div>
+        <div class="row"><span class="label">Reference</span><span class="value" id="payRef">—</span></div>
+        <div class="row"><span class="label">Amount</span><span class="value" id="payAmount">—</span></div>
+        <div class="row"><span class="label">Status</span><span class="value success">In Escrow 🔒</span></div>
+      </div>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <a href="dashboard.html" class="btn btn-primary">Go to Dashboard</a>
+        <a href="booking.html" class="btn btn-outline">Book Another</a>
+      </div>
+    </div>
+
+    <!-- State: failed -->
+    <div id="failedState" style="display:none;">
+      <div class="icon error">❌</div>
+      <h1>Payment Failed</h1>
+      <p>Your payment could not be processed. Please try again or use a different payment method.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <a href="booking.html" class="btn btn-primary">Try Again</a>
+        <a href="dashboard.html" class="btn btn-outline">Go to Dashboard</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="api.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const reference = params.get('reference');
+      const trxref = params.get('trxref');
+      const ref = reference || trxref;
+
+      if (!ref) {
+        // No reference — show error
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('failedState').style.display = 'block';
+        return;
+      }
+
+      document.getElementById('payRef').textContent = ref;
+      if (!isAuthenticated()) {
+        // Can't verify without a session — still show a graceful state
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('successState').style.display = 'block';
+        document.getElementById('bookId').textContent = '—';
+        document.getElementById('payAmount').textContent = '—';
+        return;
+      }
+
+      // Verify against the real backend — poll a few times in case the
+      // Paystack webhook is still being processed.
+      const attempts = 5;
+      let count = 0;
+
+      function isPaid(status) {
+        return status === 'paid_escrow' || status === 'completed' || status === 'funds_released';
+      }
+
+      async function verify() {
+        try {
+          const booking = await getBookingByReference(ref);
+          if (booking) {
+            document.getElementById('loadingState').style.display = 'none';
+            if (isPaid(booking.status)) {
+              document.getElementById('successState').style.display = 'block';
+              document.getElementById('bookId').textContent = `BK-${booking.id}`;
+              document.getElementById('payAmount').textContent = '₦' + Number(booking.total_price || 0).toLocaleString();
+              return;
+            }
+            // Booking exists but payment still processing — retry briefly
+            document.getElementById('loadingState').querySelector('p').textContent =
+              'Payment received — confirming with Paystack…';
+          }
+        } catch (err) {
+          // Booking not found (yet) — fall through to retry
+        }
+        count++;
+        if (count < attempts) {
+          setTimeout(verify, 1500);
+        } else {
+          document.getElementById('loadingState').style.display = 'none';
+          document.getElementById('failedState').style.display = 'block';
+        }
+      }
+
+      verify();
+    });
+  </script>
+</body>
+</html>

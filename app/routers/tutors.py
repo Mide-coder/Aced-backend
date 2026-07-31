@@ -96,6 +96,49 @@ def search_tutors(
     return results
 
 
+# ── Get My Tutor Profile ───────────────────────────────────────────────────────
+# NOTE: must be declared BEFORE /{tutor_id} — FastAPI matches routes in order.
+
+@router.get("/me", response_model=TutorSearchResult)
+def get_my_tutor_profile(
+    current_user: dict = Depends(get_current_user),
+    session: Session = Depends(get_session),
+):
+    """Get the currently authenticated tutor's own profile (with courses)."""
+    if current_user.get("role") != "tutor":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only tutors can access this endpoint",
+        )
+
+    user_id = int(current_user["sub"])
+    profile = session.exec(
+        select(TutorProfile).where(TutorProfile.user_id == user_id)
+    ).first()
+    if not profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Tutor profile not found — create one first",
+        )
+
+    user = session.get(User, profile.user_id)
+    course_links = session.exec(
+        select(TutorCourse).where(TutorCourse.tutor_profile_id == profile.id)
+    ).all()
+    course_ids = [link.course_id for link in course_links]
+    courses = []
+    if course_ids:
+        courses = session.exec(
+            select(Course).where(Course.id.in_(course_ids))
+        ).all()
+
+    return TutorSearchResult(
+        tutor=TutorProfileRead.model_validate(profile),
+        user=UserRead.model_validate(user),
+        courses=[c.code for c in courses],
+    )
+
+
 # ── Get Tutor Profile ─────────────────────────────────────────────────────────
 
 @router.get("/{tutor_id}", response_model=TutorSearchResult)

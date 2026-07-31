@@ -32,6 +32,7 @@ from app.routers import bookings as bookings_router
 from app.routers import payments as payments_router
 from app.routers import admin as admin_router
 from app.routers import public as public_router
+from app.routers import courses as courses_router
 
 logger = get_logger("aced.main")
 
@@ -149,6 +150,7 @@ app.include_router(bookings_router.router)
 app.include_router(payments_router.router)
 app.include_router(admin_router.router)
 app.include_router(public_router.router)
+app.include_router(courses_router.router)
 
 # Setup structured logging on startup
 setup_logging()
